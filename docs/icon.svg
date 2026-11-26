@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="14 14 80 80" width="160" height="160" role="img" aria-label="TowerScope Live icon">
+  <defs>
+    <radialGradient id="bg" cx="54" cy="40" r="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0E2D44"/>
+      <stop offset="1" stop-color="#050A14"/>
+    </radialGradient>
+    <clipPath id="clip"><rect x="14" y="14" width="80" height="80" rx="18"/></clipPath>
+  </defs>
+  <g clip-path="url(#clip)">
+    <rect x="0" y="0" width="108" height="108" fill="url(#bg)"/>
+    <circle cx="54" cy="54" r="34" fill="none" stroke="#22D3EE" stroke-opacity="0.2" stroke-width="1"/>
+    <circle cx="54" cy="54" r="22" fill="none" stroke="#22D3EE" stroke-opacity="0.13" stroke-width="1"/>
+    <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M54,44 L44,76 M54,44 L64,76 M47.5,64 L60.5,64 M49.5,57 L58.5,57" stroke="#E7EEF9"/>
+      <path d="M45,33 A13,13 0,0 0,45 51 M63,33 A13,13 0,0 1,63 51" stroke="#22D3EE"/>
+      <path d="M38,27 A22,22 0,0 0,38 57 M70,27 A22,22 0,0 1,70 57" stroke="#22D3EE" stroke-opacity="0.6"/>
+    </g>
+    <circle cx="54" cy="42" r="4" fill="#22D3EE"/>
+  </g>
+</svg>

@@ -19,7 +19,7 @@ android {
         minSdk = 29
         targetSdk = 36
         versionCode = ciVersionCode ?: 1
-        versionName = "1.0.${ciVersionCode ?: 0}"
+        versionName = System.getenv("VERSION_NAME") ?: "0.9.${ciVersionCode ?: 0}"
     }
 
     signingConfigs {

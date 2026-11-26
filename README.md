@@ -15,9 +15,11 @@ platform layers are native: Android `TelephonyManager`, and iOS `CoreTelephony`/
 
 You don't need Android Studio or any developer tools. Every change pushed to this repository is built
 automatically and published as an APK file on the [Releases page](https://github.com/garyleebairdjr-cmyk/towerscope-live/releases/latest).
+The app is currently a **pre-beta**: fully working, but expect rough edges and frequent updates.
+The [wiki](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki) has a full user guide.
 
 1. **On your phone**, open the [latest release](https://github.com/garyleebairdjr-cmyk/towerscope-live/releases/latest)
-   and tap the file named `TowerScope-Live-1.0.N.apk` under **Assets** to download it.
+   and tap the file named `TowerScope-Live-0.9.N.apk` (or `TowerScope-Live.apk`) under **Assets** to download it.
 2. Open the downloaded file (tap the download notification, or find it in **Files → Downloads**).
 3. Android will ask for permission to install apps from that source (your browser or Files app). Tap
    **Settings**, turn on **Allow from this source**, then go back and tap **Install**.
@@ -137,7 +139,7 @@ is used.
 
 [.github/workflows/android.yml](.github/workflows/android.yml) runs on every push and pull request. It runs
 the unit tests and builds the minified release APK. On pushes to `main` it also publishes a GitHub Release
-(`v1.0.<run number>`) with the APK attached. The signing key comes from the repository secrets
+(`v0.9.<run number>`, titled "pre-beta" for now) with the APK attached. The signing key comes from the repository secrets
 `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`.
 
 ### iOS (requires macOS + Xcode)

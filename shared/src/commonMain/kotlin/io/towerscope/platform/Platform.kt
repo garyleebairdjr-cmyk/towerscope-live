@@ -34,6 +34,9 @@ interface PlatformServices {
     /** Opens a system settings page. Apps can't change these settings; the user does. */
     fun openSystemSettings(target: io.towerscope.calc.SettingsTarget) {}
 
+    /** Installed app version (e.g. "1.0.12"), if the platform can report it. */
+    val appVersion: String? get() = null
+
     /** ISO 3166 country of the device locale (e.g. "US"), used to pick default units. */
     val regionCode: String? get() = null
 }

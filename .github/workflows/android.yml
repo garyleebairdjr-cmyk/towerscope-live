@@ -19,6 +19,9 @@ jobs:
     timeout-minutes: 45
     env:
       VERSION_CODE: ${{ github.run_number }}
+      # Bump VERSION_PREFIX / change CHANNEL (pre-beta → beta → stable) when the app graduates.
+      VERSION_NAME: 0.9.${{ github.run_number }}
+      CHANNEL: pre-beta
     steps:
       - uses: actions/checkout@v5
 
@@ -63,12 +66,14 @@ jobs:
       - name: Name the APK
         run: |
           mkdir -p dist
-          cp androidApp/build/outputs/apk/release/androidApp-release.apk "dist/TowerScope-Live-1.0.${VERSION_CODE}.apk"
+          cp androidApp/build/outputs/apk/release/androidApp-release.apk "dist/TowerScope-Live-${VERSION_NAME}.apk"
+          # Fixed-name copy so .../releases/latest/download/TowerScope-Live.apk always works.
+          cp androidApp/build/outputs/apk/release/androidApp-release.apk "dist/TowerScope-Live.apk"
           ls -la dist
 
       - uses: actions/upload-artifact@v4
         with:
-          name: TowerScope-Live-1.0.${{ github.run_number }}
+          name: TowerScope-Live-0.9.${{ github.run_number }}
           path: dist/*.apk
 
       - name: Publish GitHub Release
@@ -78,13 +83,32 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          TAG="v1.0.${VERSION_CODE}"
-          gh release create "$TAG" dist/*.apk \
+          TITLE="TowerScope Live ${VERSION_NAME}"
+          [ "$CHANNEL" != "stable" ] && TITLE="$TITLE $CHANNEL"
+          gh release create "v${VERSION_NAME}" dist/*.apk \
             --target "$GITHUB_SHA" \
-            --title "TowerScope Live 1.0.${VERSION_CODE}" \
+            --title "$TITLE" \
             --latest \
-            --notes "Automatic build of ${GITHUB_SHA::7}.
+            --notes "Automatic ${CHANNEL} build of ${GITHUB_SHA::7}.
 
-          **Install on Android:** download the APK below on your phone and open it. See [installation instructions](https://github.com/${GITHUB_REPOSITORY}#install-on-android-no-app-store).
+          **Install on Android:** open this page on your phone and tap \`TowerScope-Live-${VERSION_NAME}.apk\` below. First time? See [Installing on Android](https://github.com/${GITHUB_REPOSITORY}/wiki/Installing-on-Android).
 
           Changes: ${COMMIT_MSG}"
+
+      - name: Update wiki Download page
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && env.HAS_RELEASE_KEY == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! git clone -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki; then
+            echo "::warning::Wiki not initialised yet; skipping the Download page update."
+            exit 0
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" | python3 .github/scripts/wiki_downloads.py "$GITHUB_REPOSITORY" > wiki/Download.md
+          cd wiki
+          if git diff --quiet -- Download.md; then echo "Download page unchanged"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Download.md
+          git commit -q -m "Update Download page for v${VERSION_NAME}"
+          git push -q || echo "::warning::Could not push to the wiki."

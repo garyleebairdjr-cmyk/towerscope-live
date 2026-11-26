@@ -146,7 +146,7 @@ fun SettingsScreen(controller: AppController) {
 
         GlassCard(Modifier.fillMaxWidth()) {
             SectionHeader("About")
-            KeyValueRow("App", "TowerScope 1.0")
+            KeyValueRow("App", "TowerScope Live " + (controller.platform.appVersion ?: ""))
             Divider(); KeyValueRow("Tower data", "OpenCelliD (CC BY-SA 4.0)")
             Divider(); KeyValueRow("Speed test", "speed.cloudflare.com")
             Spacer(Modifier.height(6.dp))

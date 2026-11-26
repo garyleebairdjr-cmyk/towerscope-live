@@ -202,6 +202,9 @@ class IosPlatform : PlatformServices {
 
     override val regionCode: String? get() = NSLocale.currentLocale.countryCode
 
+    override val appVersion: String?
+        get() = platform.Foundation.NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String
+
     override fun deviceConditions(): io.towerscope.calc.DeviceConditions =
         io.towerscope.calc.DeviceConditions(powerSaveMode = NSProcessInfo.processInfo.lowPowerModeEnabled)
 

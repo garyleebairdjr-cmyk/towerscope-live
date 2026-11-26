@@ -178,6 +178,10 @@ class AndroidPlatform(context: Context) : PlatformServices {
 
     override val regionCode: String? get() = java.util.Locale.getDefault().country.takeIf { it.isNotBlank() }
 
+    override val appVersion: String? by lazy {
+        runCatching { app.packageManager.getPackageInfo(app.packageName, 0).versionName }.getOrNull()
+    }
+
     override fun deviceConditions(): io.towerscope.calc.DeviceConditions {
         val pm = app.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
         val cm = app.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
