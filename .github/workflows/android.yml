@@ -45,8 +45,9 @@ jobs:
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
             echo "TOWERSCOPE_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "HAS_RELEASE_KEY=true" >> "$GITHUB_ENV"
           else
-            echo "::warning::KEYSTORE_BASE64 secret not set; APK will be signed with a throwaway debug key."
+            echo "::warning::KEYSTORE_BASE64 secret not set: building with a throwaway debug key and skipping the GitHub Release (so users never get an APK that can't update)."
           fi
 
       - name: Build release APK
@@ -68,7 +69,8 @@ jobs:
           path: dist/*.apk
 
       - name: Publish GitHub Release
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        # Only publish builds signed with the permanent key; otherwise updates wouldn't install over each other.
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && env.HAS_RELEASE_KEY == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
