@@ -101,8 +101,9 @@ fun PermissionCard(controller: AppController) {
         }
         Spacer(Modifier.height(10.dp))
         Text(
-            "TowerScope reads the cell towers your phone can hear and pairs them with GPS to locate them. " +
-                "Nothing leaves your device except anonymous tower lookups to OpenCelliD (if you add a key) and speed-test traffic.",
+            "TowerScope Live reads the cell towers your phone can hear and pairs them with GPS to locate them. " +
+                "Your readings stay on this phone. The only things sent anywhere are tower lookups to OpenCelliD " +
+                "(only if you add a key) and speed tests you start.",
             fontSize = 13.sp, color = Palette.TextDim, lineHeight = 18.sp,
         )
         Spacer(Modifier.height(14.dp))
