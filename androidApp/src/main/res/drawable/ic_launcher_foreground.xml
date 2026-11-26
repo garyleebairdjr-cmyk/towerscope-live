@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Mast -->
+    <path android:pathData="M54,44 L44,76 M54,44 L64,76 M47.5,64 L60.5,64 M49.5,57 L58.5,57"
+        android:strokeColor="#FFE7EEF9" android:strokeWidth="3" android:strokeLineCap="round"
+        android:strokeLineJoin="round" android:fillColor="#00000000" />
+    <!-- Antenna head -->
+    <path android:pathData="M54,42m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" android:fillColor="#FF22D3EE" />
+    <!-- Radio waves -->
+    <path android:pathData="M45,33 A13,13 0,0 0,45 51" android:strokeColor="#FF22D3EE"
+        android:strokeWidth="3" android:strokeLineCap="round" android:fillColor="#00000000" />
+    <path android:pathData="M63,33 A13,13 0,0 1,63 51" android:strokeColor="#FF22D3EE"
+        android:strokeWidth="3" android:strokeLineCap="round" android:fillColor="#00000000" />
+    <path android:pathData="M38,27 A22,22 0,0 0,38 57" android:strokeColor="#9922D3EE"
+        android:strokeWidth="3" android:strokeLineCap="round" android:fillColor="#00000000" />
+    <path android:pathData="M70,27 A22,22 0,0 1,70 57" android:strokeColor="#9922D3EE"
+        android:strokeWidth="3" android:strokeLineCap="round" android:fillColor="#00000000" />
+</vector>

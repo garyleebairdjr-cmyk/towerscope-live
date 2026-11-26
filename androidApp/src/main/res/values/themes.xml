@@ -1,0 +1,10 @@
+<resources>
+    <color name="ts_bg">#FF060A13</color>
+    <color name="ts_icon_bg">#FF07121F</color>
+    <style name="Theme.TowerScope" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ts_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>
