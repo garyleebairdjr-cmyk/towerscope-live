@@ -52,7 +52,8 @@ The [wiki](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki) has a fu
 and emulators can run the app but have no real tower data.
 
 **Updating:** install a newer APK the same way. It installs over the old version and keeps your settings,
-because every release is signed with the same key.
+because every release is signed with the same key. If you're coming from 0.9.11 or earlier: History & patterns
+is now off until you turn it on, so turn **Record history** back on if you were using it.
 
 **Verifying the download (optional):** releases are signed with a certificate whose SHA-256 fingerprint is
 `BF:E8:9F:40:55:85:7F:FD:9B:8B:D3:76:E6:F6:60:6C:DC:CA:7E:4F:3F:D1:EB:D4:A7:96:B7:7D:F5:D0:DA:F7`.
@@ -91,18 +92,23 @@ Captured on a Samsung Galaxy A16 (Android 16) connected to T-Mobile LTE band 3, 
 
 ## Features
 
-| Area | What you get |
-|---|---|
-| **Overview** | Animated radar showing the serving tower, neighbor cells and database towers. The radar rotates with the compass and marks both true north and magnetic north. A bold beam points to the serving tower, with its bearing and how far to turn. Also: signal gauge, link score, distance, bearing, and estimated download/upload. |
-| **Signal** | Link-quality score (0–100), live history chart with grade bands, and every metric (RSRP, RSRQ, SINR, RSSI, CQI, TA, RSCP, Ec/No). Includes a serving-vs-neighbor comparison. |
-| **Metric drill-down** | Threshold scale, history with min/avg/max/std dev, and values derived from the metric: path loss, SNR margin, modulation, Shannon limit, MIMO rank, distance from TA, and MCS from CQI. Each metric also explains what it is, what affects it and how to improve it. |
-| **Cell detail** | Distance compared across 4 methods (with error bars), a compass arrow pointing to the tower, and the throughput model with every input. Also: band and frequencies (DL/UL), wavelength, Fresnel zone, radio horizon, elevation angle, Doppler, decoded IDs (eNB/gNB ID, sector, PCI group, RNC…) and tower coordinates. |
-| **Towers** | Cells your phone hears (serving, secondary, neighbors) and towers recorded in OpenCelliD within about 1 km. Each is tagged *serving*, *heard* or *nearest*. |
-| **History & patterns** | Open-source edition, off until you turn it on. On-phone history of signal and speed tests (up to 90 days) that finds your best places, time-of-day patterns, your best towers, and alerts when things get worse. You choose exact, approximate or no location, whether it goes into your Google backup, and whether it keeps recording with the app closed. You can export it as a CSV file. |
-| **Diagnosis** | Checks the readings for common problems: weak signal, strong-but-noisy signal, a neighbor cell that stays much stronger, weak 5G, battery saver, an active VPN, outdated software, and congestion (good signal, poor measured speed). Each finding explains what to do and opens the right settings page. |
-| **Find best spot** | Walk around and compare a 4-second signal average at each place. Save spots and they're ranked automatically, and the phone vibrates at a new best. |
-| **Better signal guide** | Plain-language explanations of what actually improves reception, by roughly how much, and which popular tricks don't work. |
-| **Speed** | Ping/jitter, then 4-stream download and 3-stream upload against `speed.cloudflare.com`. Shows a live gauge, a throughput chart, and measured vs radio-model vs Android estimate. Asks before using mobile data. |
+Everything in this table is on Android. The **iPhone** column says what Apple allows there; see
+[iOS limitation](#ios-requires-macos--xcode) and [IOS.md](IOS.md).
+
+| Area | What you get | iPhone |
+|---|---|---|
+| **Overview** | Animated radar showing the serving tower, neighbor cells and database towers. The radar rotates with the compass and marks both true north and magnetic north. A bold beam points to the serving tower, with its bearing and how far to turn. Also: signal gauge, link score, distance, bearing, and estimated download/upload. | Nearest known tower from OpenCelliD with distance, bearing and compass beam; network type |
+| **Signal** | Link-quality score (0–100), live history chart with grade bands, and every metric (RSRP, RSRQ, SINR, RSSI, CQI, TA, RSCP, Ec/No). Includes a serving-vs-neighbor comparison. | No (iOS doesn't expose signal) |
+| **Metric drill-down** | Threshold scale, history with min/avg/max/std dev, and values derived from the metric: path loss, SNR margin, modulation, Shannon limit, MIMO rank, distance from TA, and MCS from CQI. Each metric also explains what it is, what affects it and how to improve it. | No |
+| **Cell detail** | Distance compared across 4 methods (with error bars), a compass arrow pointing to the tower, and the throughput model with every input. Also: band and frequencies (DL/UL), wavelength, Fresnel zone, radio horizon, elevation angle, Doppler, decoded IDs (eNB/gNB ID, sector, PCI group, RNC…) and tower coordinates. | No |
+| **Towers** | Cells your phone hears (serving, secondary, neighbors) and towers recorded in OpenCelliD within about 1 km. Each is tagged *serving*, *heard* or *nearest*. | Database towers only |
+| **History & patterns** | Open-source edition, off until you turn it on. On-phone history of signal and speed tests (up to 90 days) that finds your best places, time-of-day patterns, your best towers, and alerts when things get worse. You choose exact, approximate or no location, whether it goes into your Google backup, and whether it keeps recording with the app closed. You can export it as a CSV file. | No (same as the Play edition) |
+| **Diagnosis** | Checks the readings for common problems: weak signal, strong-but-noisy signal, a neighbor cell that stays much stronger, weak 5G, battery saver, an active VPN, outdated software, and congestion (good signal, poor measured speed). Each finding explains what to do and opens the right settings page. | Limited to checks that don't need signal readings |
+| **Find best spot** | Walk around and compare a 4-second signal average at each place. Save spots and they're ranked automatically, and the phone vibrates at a new best. | No |
+| **Better signal guide** | Plain-language explanations of what actually improves reception, by roughly how much, and which popular tricks don't work. | Yes |
+| **Speed** | Ping/jitter, then 4-stream download and 3-stream upload against `speed.cloudflare.com`. Shows a live gauge, a throughput chart, and measured vs radio-model vs Android estimate. Asks before using mobile data. | Yes, without the radio-model prediction |
+| **First start** | Explains location (and the optional phone permission) before Android asks; nothing is requested until you tap **Continue**. **Not now** keeps the speed test usable. | Yes, location only |
+| **Editions** | Open source: free, with optional history, CSV export and background recording. Google Play: 7-day trial, then a one-time $1.99 unlock, no history. See [EDITIONS.md](EDITIONS.md). | App Store: 7-day trial, then a one-time $1.99 unlock |
 
 ### How the derived values are calculated
 
