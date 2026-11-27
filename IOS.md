@@ -58,7 +58,7 @@ On a Mac:
 ```bash
 brew install xcodegen
 cd iosApp
-cp Signing.xcconfig Signing.local.xcconfig   # then set DEVELOPMENT_TEAM to Art's Team ID (this file is gitignored)
+echo 'DEVELOPMENT_TEAM = YOURTEAMID' > Signing.local.xcconfig   # gitignored
 xcodegen                                      # generates TowerScope.xcodeproj
 open TowerScope.xcodeproj                     # pick an iPhone, then Run
 ```
@@ -66,6 +66,9 @@ open TowerScope.xcodeproj                     # pick an iPhone, then Run
 - **Xcode version.** Since April 28, 2026, App Store uploads must be built with Xcode 26 or later and the iOS 26
   SDK ([Apple](https://developer.apple.com/news/upcoming-requirements/?id=04282026a)). The app still runs on
   iOS 16 and newer; that's only the deployment target.
+- **Java:** the Xcode build step runs Gradle, so a JDK must be visible to Xcode (for Homebrew's `openjdk@21`,
+  link it into `/Library/Java/JavaVirtualMachines`). Plain-language steps for building it yourself are on the
+  wiki's [Installing on iPhone](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki/Installing-on-iPhone) page.
 - **Bundle ID:** `io.towerscope.live`. **Team ID:** `YOUR_APPLE_TEAM_ID` in git, the real one only in
   `Signing.local.xcconfig`.
 - **Testing purchases without App Store Connect.** The Run scheme uses `iosApp/TowerScope/TowerScope.storekit`,

@@ -65,7 +65,8 @@ You can check it with `apksigner verify --print-certs TowerScope-Live-*.apk`.
 
 The iPhone version is being prepared for the App Store, with testing through TestFlight first. It will be
 published on a collaborator's Apple Developer team. Until then, it can be built from source with a Mac and
-Xcode (see [Building](#ios-requires-macos--xcode)). Keep in mind Apple doesn't let iPhone apps read cell
+Xcode (see [Building](#ios-requires-macos--xcode), or the plain-language
+[Installing on iPhone](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki/Installing-on-iPhone) guide). Keep in mind Apple doesn't let iPhone apps read cell
 signal data at all, so the iPhone version is limited (see below). [IOS.md](IOS.md) has the full plan.
 
 ## Screenshots
@@ -194,7 +195,7 @@ the unit tests and builds the minified open-source release APK (`assembleFossRel
 ```bash
 brew install xcodegen
 cd iosApp
-cp Signing.xcconfig Signing.local.xcconfig   # set DEVELOPMENT_TEAM here (gitignored)
+echo 'DEVELOPMENT_TEAM = YOURTEAMID' > Signing.local.xcconfig   # gitignored
 xcodegen                                      # generates TowerScope.xcodeproj
 open TowerScope.xcodeproj                     # pick an iPhone, then Run
 ```

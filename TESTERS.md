@@ -88,7 +88,7 @@ from Google Play:
 
 - **No 14-day rule.** Apple doesn't require a set number of testers or days. Stay as long as you like.
 - **What you need:** an iPhone and an Apple Account. You install through Apple's free **TestFlight** app,
-  not from a file.
+  not from a file. Step by step: [Installing on iPhone](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki/Installing-on-iPhone).
 - **How you join:** I'll either email you an invite or send a public link: [TESTFLIGHT PUBLIC LINK]. Open it
   on your iPhone, install TestFlight if asked, then tap **Accept** and **Install**.
 - **Two kinds of testers.** Up to 100 people on the developer team can test right away (internal testers,

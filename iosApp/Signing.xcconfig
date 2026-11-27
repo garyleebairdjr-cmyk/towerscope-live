@@ -1,9 +1,12 @@
 // Signing for the TowerScope iPhone app. Committed with placeholders only.
 //
 // TowerScope Live is published on Art's Apple Developer team (see IOS.md). Once you're on that team, put
-// the real Team ID in Signing.local.xcconfig (gitignored), for example:
+// the real Team ID in a new file, Signing.local.xcconfig (gitignored), for example:
 //
 //   DEVELOPMENT_TEAM = ABCDE12345
+//
+// Don't copy this file to make it: this file includes Signing.local.xcconfig, so a copy would include itself.
+// With a free Apple Account, also set your own PRODUCT_BUNDLE_IDENTIFIER there.
 //
 // CI builds for the simulator with CODE_SIGNING_ALLOWED=NO and needs none of this. TestFlight builds on CI
 // get their certificates from fastlane match (see fastlane/Matchfile).
