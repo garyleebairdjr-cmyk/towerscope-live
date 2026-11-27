@@ -1,7 +1,8 @@
-# Two editions of TowerScope Live
+# Editions of TowerScope Live
 
-TowerScope Live comes in two editions built from the same code. They look the same and share the same
-screens. The difference is how much they keep about you, and how you get them.
+TowerScope Live comes in two Android editions built from the same code, plus an iPhone version being
+prepared for the App Store. They look the same and share the same screens. On Android, the difference is how
+much they keep about you and how you get them. On iPhone, Apple limits what any app can read, so it does less.
 
 ## The Play edition: simple and private
 
@@ -26,25 +27,37 @@ all of that, and every extra is something you switch on yourself.
 - Optional recording with the app closed. It shows a notification the whole time, with a Stop button.
 - Free. You build it yourself or install the APK from GitHub. It is not the Play listing.
 
+## The iPhone edition: what Apple allows
+
+Apple doesn't let any iPhone app see which cell tower the phone is using, or read signal strength. So the
+iPhone version can't identify your serving tower. It shows the towers recorded near you in OpenCelliD, with
+distance and direction to the nearest one, your network type (LTE, 5G and so on), and the full speed test.
+It follows the Play edition's privacy rules and price. The details are in [IOS.md](IOS.md).
+
 ## Side by side
 
-| | Play edition | Open-source edition |
-|---|---|---|
-| Price | Free 7-day trial, then $1.99 once | Free |
-| Where to get it | Google Play | [GitHub releases](https://github.com/garyleebairdjr-cmyk/towerscope-live/releases/latest) or build from source |
-| Package name | `io.towerscope.live` | `io.towerscope.android` |
-| App name on your phone | TowerScope Live | TowerScope Live (Open Source) |
-| Location | Precise, only while the app is open | Precise, only while the app is open (unless you turn on background recording) |
-| Background recording | Not available | Optional, off by default, with a notification while it runs |
-| Long-term history | Not available | Optional, off by default, up to 90 days on the phone |
-| Location kept with history | Not applicable | Your choice: exact, approximate (about 100 m) or none |
-| Google backup of history | Not applicable | Optional, off by default |
-| Export | Not available | Optional CSV export |
-| Billing | Google Play, one-time unlock | None |
-| Live signal charts, radar, tower lookup, speed test, diagnosis | Yes | Yes |
+| | Android, Play edition | Android, open source | iPhone, App Store |
+|---|---|---|---|
+| Price | Free 7-day trial, then $1.99 once | Free | Free 7-day trial, then $1.99 once |
+| Where to get it | Google Play | [GitHub releases](https://github.com/garyleebairdjr-cmyk/towerscope-live/releases/latest) or build from source | App Store (being prepared) |
+| Package or bundle ID | `io.towerscope.live` | `io.towerscope.android` | `io.towerscope.live` |
+| App name on your phone | TowerScope Live | TowerScope Live (Open Source) | TowerScope Live |
+| Identifies the tower you're connected to | Yes | Yes | No, iOS doesn't allow it |
+| Live signal strength and charts | Yes | Yes | No, iOS doesn't allow it |
+| Nearby towers from OpenCelliD | Yes | Yes | Yes |
+| Distance and direction | To your serving tower | To your serving tower | To the nearest known tower |
+| Speed test | Yes | Yes | Yes |
+| Location | Precise, only while the app is open | Precise, only while the app is open (unless you turn on background recording) | Precise, only while the app is open |
+| Background recording | Not available | Optional, off by default, with a notification while it runs | Not available |
+| Long-term history | Not available | Optional, off by default, up to 90 days on the phone | Not available |
+| Location kept with history | Not applicable | Your choice: exact, approximate (about 100 m) or none | Not applicable |
+| Google backup of history | Not applicable | Optional, off by default | Not applicable |
+| Export | Not available | Optional CSV export | Not available |
+| Billing | Google Play, one-time unlock | None | App Store, one-time unlock |
+| Radar, diagnosis, better-signal guide | Yes | Yes | Radar and guide; diagnosis is limited without signal readings |
 
-Both editions can be installed on the same phone at the same time, because they have different package
-names. Settings and API keys aren't shared between them.
+Both Android editions can be installed on the same phone at the same time, because they have different
+package names. Settings and API keys aren't shared between them.
 
 ## Why precise location in both
 
@@ -61,5 +74,5 @@ TowerScope never uses it to read your number, calls or contacts, and it works wi
 
 ## Privacy
 
-- Play edition: [PRIVACY.md](PRIVACY.md)
+- Play edition and iPhone: [PRIVACY.md](PRIVACY.md)
 - Both editions: [Privacy and Permissions](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki/Privacy-and-Permissions) on the wiki

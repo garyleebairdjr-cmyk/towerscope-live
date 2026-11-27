@@ -124,9 +124,13 @@ fun TowerScopeApp(controller: AppController, navigator: Navigator) {
         onDispose { }
     }
     TowerScopeTheme {
-        // Play edition: once the free week is over without an unlock, show only the paywall.
+        // Store editions: before the trial starts (App Store) or after it ends, show only the paywall.
         controller.license?.let { lic ->
             val ls by lic.state.collectAsState()
+            if (!ls.known) {
+                Box(Modifier.fillMaxSize().background(Palette.Bg)) // the store hasn't answered yet; avoids a paywall flash
+                return@TowerScopeTheme
+            }
             if (ls.locked(controller.platform.nowMs())) {
                 io.towerscope.ui.screens.PaywallScreen(lic)
                 return@TowerScopeTheme

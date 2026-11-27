@@ -1,0 +1,54 @@
+{
+  "identifier" : "A1B2C3D4",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "0.0",
+      "familyShareable" : false,
+      "internalID" : "6740000001",
+      "localizations" : [
+        {
+          "description" : "Use every feature of TowerScope Live free for 7 days.",
+          "displayName" : "7-day Trial",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "towerscope_7_day_trial",
+      "referenceName" : "7-day Trial",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "6740000002",
+      "localizations" : [
+        {
+          "description" : "Unlock TowerScope Live for good. One-time purchase, not a subscription.",
+          "displayName" : "TowerScope Live Unlock",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "towerscope_unlock",
+      "referenceName" : "TowerScope Live Unlock",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6740000000",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

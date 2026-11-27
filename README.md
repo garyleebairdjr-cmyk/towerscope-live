@@ -4,7 +4,8 @@
 [![Latest release](https://img.shields.io/github/v/release/garyleebairdjr-cmyk/towerscope-live?label=download%20APK)](https://github.com/garyleebairdjr-cmyk/towerscope-live/releases/latest)
 
 [Wiki and user guide](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki) ·
-[Two editions](EDITIONS.md) ·
+[Editions](EDITIONS.md) ·
+[iPhone](IOS.md) ·
 [Privacy](PRIVACY.md) ·
 [Help test it on Google Play](TESTERS.md) ·
 [Building](#building)
@@ -61,11 +62,10 @@ You can check it with `apksigner verify --print-certs TowerScope-Live-*.apk`.
 
 ### iPhone
 
-There's no simple way to install an iPhone app outside the App Store: Apple requires apps to be signed
-by a registered developer. For now, the iOS version can be built from source with a Mac and Xcode (see
-[Building](#ios-requires-macos--xcode)) and installed on your own iPhone. App Store or TestFlight
-distribution would need an Apple Developer account. Keep in mind Apple doesn't let iPhone apps read
-cell signal data at all, so the iPhone version is limited (see below).
+The iPhone version is being prepared for the App Store, with testing through TestFlight first. It will be
+published on a collaborator's Apple Developer team. Until then, it can be built from source with a Mac and
+Xcode (see [Building](#ios-requires-macos--xcode)). Keep in mind Apple doesn't let iPhone apps read cell
+signal data at all, so the iPhone version is limited (see below). [IOS.md](IOS.md) has the full plan.
 
 ## Screenshots
 
@@ -187,20 +187,27 @@ the unit tests and builds the minified open-source release APK (`assembleFossRel
 
 ```bash
 brew install xcodegen
-cd iosApp && xcodegen          # generates TowerScope.xcodeproj
-open TowerScope.xcodeproj      # set your signing team, then Run
+cd iosApp
+cp Signing.xcconfig Signing.local.xcconfig   # set DEVELOPMENT_TEAM here (gitignored)
+xcodegen                                      # generates TowerScope.xcodeproj
+open TowerScope.xcodeproj                     # pick an iPhone, then Run
 ```
 
-The Xcode pre-build phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`.
+The Xcode pre-build phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`. App Store uploads
+need Xcode 26 or later. The bundle ID is `io.towerscope.live`. Linux can't build the iPhone app; the
+[iOS workflow](.github/workflows/ios.yml) builds it on GitHub's Macs (an unsigned simulator build on every
+push, and TestFlight uploads by hand once the signing secrets exist). See [IOS.md](IOS.md).
 
 **iOS limitation:** Apple doesn't let third-party apps read cell IDs or signal strength. On iPhone,
 TowerScope shows:
 
 - network type (LTE / 5G NSA / 5G SA)
-- the nearest towers from OpenCelliD, with distance, bearing and compass
+- the towers recorded near you in OpenCelliD, with distance, bearing and compass to the nearest one
 - the full speed test
 
-The live radio measurements are Android-only.
+It can't tell which tower the iPhone is using, and says so in the app. The live radio measurements are
+Android-only. Like the Play edition, the iPhone version has a free 7-day trial and then a one-time $1.99
+unlock through the App Store.
 
 ## Project layout
 
@@ -217,7 +224,7 @@ shared/src/iosMain/       CoreTelephony, CoreLocation, Darwin HTTP, ComposeUIVie
 androidApp/src/main/      Activity, permissions, back handling, launcher icon
 androidApp/src/foss/      Background recording service, history export file provider
 androidApp/src/play/      Play Billing unlock and trial, manifest removals
-iosApp/                   SwiftUI host + XcodeGen spec
+iosApp/                   SwiftUI host, StoreKit 2 unlock, privacy manifest, XcodeGen spec, fastlane placeholders
 ```
 
 ## Permissions (Android)

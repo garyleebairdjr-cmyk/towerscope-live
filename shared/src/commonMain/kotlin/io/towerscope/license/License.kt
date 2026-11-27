@@ -3,20 +3,29 @@ package io.towerscope.license
 import io.towerscope.platform.KeyValueStore
 import kotlinx.coroutines.flow.StateFlow
 
-/** Where the one-time unlock stands. Only the Play edition has one; everywhere else the app is free. */
+/** Where the one-time unlock stands. Only the store editions (Google Play, App Store) have one. */
 data class LicenseState(
     /** Bought (now, or earlier and cached on this phone). */
     val unlocked: Boolean = false,
     /** When the free trial ends. */
     val trialEndsAtMs: Long = 0,
-    /** Price from Google Play in the person's currency, or null until Play answers. */
+    /** Price from the store in the person's currency, or null until the store answers. */
     val price: String? = null,
-    /** Google Play is connected and can take a purchase. */
+    /** The store is connected and can take a purchase. */
     val billingReady: Boolean = false,
     val busy: Boolean = false,
-    /** Short status for the paywall, e.g. a pending payment or Play being unreachable. */
+    /** Short status for the paywall, e.g. a pending payment or the store being unreachable. */
     val message: String? = null,
+    /** False until the store has answered once, so the app doesn't flash a paywall at launch. */
+    val known: Boolean = true,
+    /**
+     * The person starts the trial themselves after reading what it includes (App Store guideline 3.1.1).
+     * Until then [trialEndsAtMs] is 0 and the paywall offers "Start free trial". Google Play's trial starts
+     * on first open, so it leaves this false.
+     */
+    val trialStartRequired: Boolean = false,
 ) {
+    val trialNotStarted: Boolean get() = trialStartRequired && trialEndsAtMs == 0L
     fun trialActive(nowMs: Long): Boolean = nowMs < trialEndsAtMs
     fun locked(nowMs: Long): Boolean = !unlocked && !trialActive(nowMs)
     fun trialDaysLeft(nowMs: Long): Int = if (!trialActive(nowMs)) 0 else ((trialEndsAtMs - nowMs + DAY_MS - 1) / DAY_MS).toInt()
@@ -32,6 +41,15 @@ interface LicenseManager {
     val state: StateFlow<LicenseState>
     fun purchase()
     fun restore()
+
+    /** Starts the free trial, for stores where the person starts it ([LicenseState.trialStartRequired]). */
+    fun startTrial() {}
+
+    /** Wording for the paywall. */
+    val storeName: String get() = "Google Play"
+    val accountName: String get() = "Google account"
+    /** How the trial is tracked, said plainly (it can be reset; there's no server). */
+    val trialNote: String get() = "The free week is tracked on this phone only, so it isn't carried between phones."
 }
 
 /**

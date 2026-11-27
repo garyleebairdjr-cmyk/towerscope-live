@@ -81,6 +81,41 @@ haven't unlocked it, uninstalling may reset the trial.
 **Something's broken. Should I keep going?**
 Yes, please, and tell me about it. Finding broken things is exactly what this test is for.
 
+## On iPhone: TestFlight
+
+The iPhone version will be tested through Apple's TestFlight. It's the same idea, with a few differences
+from Google Play:
+
+- **No 14-day rule.** Apple doesn't require a set number of testers or days. Stay as long as you like.
+- **What you need:** an iPhone and an Apple Account. You install through Apple's free **TestFlight** app,
+  not from a file.
+- **How you join:** I'll either email you an invite or send a public link: [TESTFLIGHT PUBLIC LINK]. Open it
+  on your iPhone, install TestFlight if asked, then tap **Accept** and **Install**.
+- **Two kinds of testers.** Up to 100 people on the developer team can test right away (internal testers,
+  each on up to 30 devices). Everyone else is an external tester, up to 10,000 per app. The first build for
+  external testers goes through a short TestFlight review by Apple, so there may be a day or two of waiting
+  before your invite works.
+- **Who's likely first:** Art, who runs the Apple developer account the app is published under, and Kaleb.
+  If you'd like to join them, tell me.
+
+**Please know before you start:** iPhones don't let any app see which tower the phone is connected to, or
+read signal strength. On iPhone, TowerScope shows the towers recorded near you, the distance and direction to
+the nearest one, your network type, and a full speed test. That's expected, not a bug. See [IOS.md](IOS.md).
+
+### What to try on iPhone
+
+- [ ] Before anything else, the app explains the 7-day trial, what happens when it ends, and the price.
+- [ ] Starting the trial works, and Settings shows the days left.
+- [ ] The location explanation appears before iOS asks, and iOS only offers "While Using the App".
+- [ ] "Not now" still lets you run a speed test.
+- [ ] With an OpenCelliD key, the Overview shows the nearest known tower with distance and direction.
+- [ ] The Towers tab opens on the database list.
+- [ ] Unlock and Restore purchase work in TestFlight. TestFlight purchases are free; you won't be charged.
+
+Feedback works the same way: TestFlight's own feedback (take a screenshot in the app and share it to
+TestFlight), a [GitHub issue](https://github.com/garyleebairdjr-cmyk/towerscope-live/issues), or
+[CONTACT EMAIL].
+
 Thank you. It means a lot.
 
 Gary

@@ -94,25 +94,57 @@ fun radioLabel(o: CellObservation): String = when (o.identity.radio) {
 @Composable
 fun PermissionCard(controller: AppController) {
     val perms by controller.permissions.collectAsState()
+    val deferred by controller.permissionsDeferred.collectAsState()
+    val iPhone = controller.platform.device.platform == io.towerscope.model.PlatformKind.IOS
+    val system = if (iPhone) "iOS" else "Android"
+
+    if (deferred) {
+        // "Not now": a smaller reminder, and the parts that work without location stay usable.
+        GlassCard(accent = Palette.Cyan) {
+            Text("Location is off", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Palette.Text)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "You can still run a speed test on the Speed tab. Turn location on to find nearby towers and see their " +
+                    "distance and direction.",
+                fontSize = 13.sp, color = Palette.TextDim, lineHeight = 18.sp,
+            )
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = { controller.deferPermissions(false) },
+                colors = ButtonDefaults.buttonColors(containerColor = Palette.Cyan, contentColor = Palette.Bg),
+            ) { Text("Turn on location", fontWeight = FontWeight.SemiBold) }
+        }
+        return
+    }
+
     GlassCard(accent = Palette.Cyan) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Lock, null, tint = Palette.Cyan, modifier = Modifier.size(22.dp))
             Spacer(Modifier.width(10.dp))
-            Text("Permissions needed", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Palette.Text)
+            Text("Before we start", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Palette.Text)
         }
         Spacer(Modifier.height(10.dp))
         val flags = io.towerscope.platform.FeatureFlags.current
         Text(
-            "TowerScope Live reads the cell towers your phone can hear and pairs them with your location to show how far " +
-                "away they are and which way to face. It only does this while the app is open. " +
+            (if (iPhone) "TowerScope Live uses your location to find the cell towers recorded near you and show how far away " +
+                "they are and which way to face. iPhones don't let apps see which tower you're connected to, so these are " +
+                "the nearest known towers. "
+            else "TowerScope Live reads the cell towers your phone can hear and pairs them with your location to show how far " +
+                "away they are and which way to face. ") +
+                "It only uses your location while the app is open. " +
                 (if (flags.allowHistoryLogging) "Nothing is kept after you close it unless you turn on History & patterns. "
                 else "It doesn't keep a record of where you've been. ") +
                 "The only things sent anywhere are tower lookups to OpenCelliD (only if you add a key) and speed tests you start. " +
-                "Android will ask next; nothing is requested until you tap the button.",
+                "$system will ask next; nothing is requested until you tap Continue.",
             fontSize = 13.sp, color = Palette.TextDim, lineHeight = 18.sp,
         )
         Spacer(Modifier.height(14.dp))
-        PermissionLine(Icons.Rounded.LocationOn, "Precise location", "Android requires it to read tower IDs; also used for distance and direction, only while the app is open", perms.location)
+        PermissionLine(
+            Icons.Rounded.LocationOn, "Precise location",
+            if (iPhone) "For nearby towers, distance and direction, only while the app is open"
+            else "Android requires it to read tower IDs; also used for distance and direction, only while the app is open",
+            perms.location,
+        )
         if (perms.phoneStateApplicable) {
             Spacer(Modifier.height(8.dp))
             PermissionLine(Icons.Rounded.PhoneAndroid, "Phone state", "Optional. Network type, 5G status and carrier aggregation. Android calls this \"make and manage phone calls\", but the app never reads your number, calls or contacts", perms.phoneState, optional = true)
@@ -125,6 +157,8 @@ fun PermissionCard(controller: AppController) {
             ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
             if (perms.requestedOnce) {
                 OutlinedButton(onClick = { controller.platform.permissions.openSettings() }) { Text("Open settings") }
+            } else {
+                androidx.compose.material3.TextButton(onClick = { controller.deferPermissions() }) { Text("Not now", color = Palette.TextDim) }
             }
         }
     }

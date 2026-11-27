@@ -99,6 +99,8 @@ class IosPlatform : PlatformServices {
 
     private fun refreshPermissions(requested: Boolean) {
         val status = manager.authorizationStatus
+        // When In Use is the grant this app asks for. It never requests Always; if a person set Always in
+        // Settings themselves, that also counts as granted.
         val granted = status == kCLAuthorizationStatusAuthorizedWhenInUse || status == kCLAuthorizationStatusAuthorizedAlways
         permissions.update(
             PermissionState(
@@ -124,8 +126,9 @@ class IosPlatform : PlatformServices {
                     timestampMs = nowMs(),
                     capabilities = RadioCapabilities(
                         canReadCells = false,
-                        limitationNote = "iOS doesn't let apps read cell IDs or signal strength. TowerScope shows your network type, " +
-                            "the nearest towers from OpenCelliD and a full speed test. Use the Android app for live radio measurements.",
+                        limitationNote = "iPhones don't let apps see which tower you're connected to, or read signal strength. " +
+                            "TowerScope shows your network type, the towers recorded near you in OpenCelliD, and a full speed test. " +
+                            "The Android app can show live signal.",
                     ),
                 ),
             )
@@ -217,6 +220,9 @@ class IosPlatform : PlatformServices {
     override fun openSystemSettings(target: io.towerscope.calc.SettingsTarget) {
         openUrl(platform.UIKit.UIApplicationOpenSettingsURLString)
     }
+
+    /** Set by MainViewController for the App Store edition (StoreKit 2, see iosApp/TowerScope/StoreKitBridge.swift). */
+    override var license: io.towerscope.license.LicenseManager? = null
 
     override fun openUrl(url: String) {
         NSURL.URLWithString(url)?.let { UIApplication.sharedApplication.openURL(it, emptyMap<Any?, Any>(), null) }

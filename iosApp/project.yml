@@ -1,4 +1,6 @@
 # Generate the Xcode project on macOS with:  brew install xcodegen && cd iosApp && xcodegen
+# Building for the App Store needs Xcode 26 or later and the iOS 26 SDK (Apple's rule since April 28, 2026).
+# The deployment target below is only the oldest iOS version the app runs on.
 name: TowerScope
 options:
   bundleIdPrefix: io.towerscope
@@ -9,12 +11,17 @@ targets:
     type: application
     platform: iOS
     sources:
-      - TowerScope
+      - path: TowerScope
+        excludes:
+          - "*.storekit" # local StoreKit testing only; never shipped
     info:
       path: TowerScope/Info.plist
+    configFiles:
+      Debug: Signing.xcconfig
+      Release: Signing.xcconfig
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.towerscope.ios
+        # Bundle ID and Team ID come from Signing.xcconfig (placeholders) and Signing.local.xcconfig (yours, gitignored).
         PRODUCT_NAME: TowerScope
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
@@ -33,3 +40,14 @@ targets:
           fi
           cd "$SRCROOT/.."
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+schemes:
+  TowerScope:
+    build:
+      targets:
+        TowerScope: all
+    run:
+      config: Debug
+      # Lets you test the trial and unlock in the simulator without App Store Connect.
+      storeKitConfiguration: TowerScope/TowerScope.storekit
+    archive:
+      config: Release

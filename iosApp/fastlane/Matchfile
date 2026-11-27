@@ -1,0 +1,10 @@
+# fastlane match keeps the signing certificate and provisioning profile in a PRIVATE git repo, encrypted with
+# MATCH_PASSWORD. It must never be this public towerscope-live repo.
+#
+# First-time setup is done once on a Mac, after Gary is on Art's Apple team (see IOS.md):
+#   cd iosApp && bundle install && bundle exec fastlane match appstore
+git_url(ENV["MATCH_GIT_URL"] || "https://github.com/YOUR_ACCOUNT/YOUR_PRIVATE_CERTS_REPO.git")
+storage_mode("git")
+type("appstore")
+app_identifier(["io.towerscope.live"])
+team_id(ENV["APPLE_TEAM_ID"] || "YOUR_APPLE_TEAM_ID")

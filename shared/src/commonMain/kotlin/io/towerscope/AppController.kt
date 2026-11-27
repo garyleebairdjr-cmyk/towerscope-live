@@ -144,7 +144,12 @@ class AppController(val platform: PlatformServices) {
     /** Long-term history is allowed in this edition and turned on by the person. */
     private val recording: Boolean get() = FeatureFlags.current.allowHistoryLogging && _settings.value.recordHistory
 
-    /** Play edition unlock, or null where the app is free. */
+    private val _permissionsDeferred = MutableStateFlow(false)
+    /** The person tapped "Not now" on the permission explanation; show a smaller reminder instead. */
+    val permissionsDeferred: StateFlow<Boolean> = _permissionsDeferred.asStateFlow()
+    fun deferPermissions(deferred: Boolean = true) { _permissionsDeferred.value = deferred }
+
+    /** Store edition unlock (Google Play or App Store), or null where the app is free. */
     val license: io.towerscope.license.LicenseManager? get() = platform.license
     private var lastNearbyFix: GeoFix? = null
 

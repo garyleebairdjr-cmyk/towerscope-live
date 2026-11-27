@@ -16,6 +16,7 @@ class TowerScopeApplication : Application() {
         // Before anything reads the flags (the controller is created lazily, after this).
         FeatureFlags.current = FeatureFlags(
             isPlayEdition = BuildConfig.IS_PLAY_EDITION,
+            editionLabel = if (BuildConfig.IS_PLAY_EDITION) "Google Play" else "Open source",
             allowPreciseLocation = BuildConfig.ALLOW_PRECISE_LOCATION,
             allowBackgroundLocation = BuildConfig.ALLOW_BACKGROUND_LOCATION,
             allowHistoryLogging = BuildConfig.ALLOW_HISTORY_LOGGING,
