@@ -171,14 +171,19 @@ class IosPlatform : PlatformServices {
         }
     }
 
+    private var declination: Float? = null
+    override val declinationDeg: Float? get() = declination
+
     override fun headings(): Flow<Float> = callbackFlow {
         if (!CLLocationManager.headingAvailable()) {
             awaitClose { }
             return@callbackFlow
         }
         delegate.onHeading = { h ->
-            val deg = if (h.trueHeading >= 0) h.trueHeading else h.magneticHeading
-            trySend(deg.toFloat())
+            val hasTrue = h.trueHeading >= 0
+            // CoreLocation reports both; their difference is the declination (east positive).
+            declination = if (hasTrue) (((h.trueHeading - h.magneticHeading + 540.0) % 360.0) - 180.0).toFloat() else null
+            trySend((if (hasTrue) h.trueHeading else h.magneticHeading).toFloat())
         }
         manager.headingFilter = 1.0
         manager.startUpdatingHeading()

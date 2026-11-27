@@ -40,6 +40,10 @@ class AndroidPlatform(context: Context) : PlatformServices {
     private val radio = AndroidRadio(app)
 
     @Volatile private var lastFix: GeoFix? = null
+    @Volatile private var declination: Float? = null
+    private var declinationFix: GeoFix? = null
+
+    override val declinationDeg: Float? get() = declination
 
     override val permissions = PermissionGate()
 
@@ -145,7 +149,12 @@ class AndroidPlatform(context: Context) : PlatformServices {
                 SensorManager.getOrientation(remapped, orient)
                 var deg = Math.toDegrees(orient[0].toDouble())
                 lastFix?.let { f ->
-                    deg += GeomagneticField(f.lat.toFloat(), f.lon.toFloat(), (f.altitudeM ?: 0.0).toFloat(), System.currentTimeMillis()).declination
+                    // The field model changes over kilometres, so recompute only when the fix changes.
+                    if (f !== declinationFix) {
+                        declinationFix = f
+                        declination = GeomagneticField(f.lat.toFloat(), f.lon.toFloat(), (f.altitudeM ?: 0.0).toFloat(), System.currentTimeMillis()).declination
+                    }
+                    deg += declination ?: 0f
                 }
                 // Circular low-pass filter to steady the needle.
                 val r = Math.toRadians(deg)

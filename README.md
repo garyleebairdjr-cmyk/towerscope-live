@@ -55,7 +55,7 @@ Captured on a Samsung Galaxy A16 (Android 16) connected to T-Mobile LTE band 3, 
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/overview.png" width="240" alt="Overview: distance to serving tower and radar"><br><sub><b>Overview</b>: tower distance and radar</sub></td>
+    <td align="center"><img src="docs/screenshots/overview.png" width="240" alt="Overview: distance to serving tower and radar"><br><sub><b>Overview</b>: distance, radar, true and magnetic north</sub></td>
     <td align="center"><img src="docs/screenshots/overview-signal.png" width="240" alt="Overview: RSRP gauge, link score and estimated speeds"><br><sub>Signal gauge, link score, est. speeds</sub></td>
     <td align="center"><img src="docs/screenshots/signal.png" width="240" alt="Signal tab: link quality score and live history chart"><br><sub><b>Signal</b>: link score and live history</sub></td>
   </tr>
@@ -75,7 +75,7 @@ Captured on a Samsung Galaxy A16 (Android 16) connected to T-Mobile LTE band 3, 
 
 | Area | What you get |
 |---|---|
-| **Overview** | Animated radar showing the serving tower, neighbor cells and database towers. The radar rotates with the compass. Also: signal gauge, link score, distance, bearing, and estimated download/upload. |
+| **Overview** | Animated radar showing the serving tower, neighbor cells and database towers. The radar rotates with the compass and marks both true north and magnetic north. A bold beam points to the serving tower, with its bearing and how far to turn. Also: signal gauge, link score, distance, bearing, and estimated download/upload. |
 | **Signal** | Link-quality score (0–100), live history chart with grade bands, and every metric (RSRP, RSRQ, SINR, RSSI, CQI, TA, RSCP, Ec/No). Includes a serving-vs-neighbor comparison. |
 | **Metric drill-down** | Threshold scale, history with min/avg/max/std dev, and values derived from the metric: path loss, SNR margin, modulation, Shannon limit, MIMO rank, TA→distance and CQI→MCS. Each metric also explains what it is, what affects it and how to improve it. |
 | **Cell detail** | Distance compared across 4 methods (with error bars), a compass arrow pointing to the tower, and the throughput model with every input. Also: band and frequencies (DL/UL), wavelength, Fresnel zone, radio horizon, elevation angle, Doppler, decoded IDs (eNB/gNB ID, sector, PCI group, RNC…) and tower coordinates. |
@@ -92,8 +92,9 @@ Captured on a Samsung Galaxy A16 (Android 16) connected to T-Mobile LTE band 3, 
   2. Timing advance (LTE 16·Ts ≈ 78.07 m/step, GSM ≈ 553.5 m/step, NR µs from API 34+).
   3. Okumura-Hata / COST-231 inverted from path loss = assumed EIRP − RSRP.
   4. Free-space upper bound.
-- **Bearing**: great-circle initial bearing. The compass applies magnetic declination (Android
-  `GeomagneticField`).
+- **Bearing**: great-circle initial bearing, relative to true north. The compass applies magnetic
+  declination (Android `GeomagneticField`, iOS `CLHeading.trueHeading`) once GPS has a fix, and the radar
+  shows the declination and magnetic north alongside true north.
 - **Bands**: EARFCN / NR-ARFCN / UARFCN / ARFCN → band and DL/UL frequency, per 3GPP 36.101, 38.104,
   25.101 and 45.005. Overlapping NR bands are resolved using the modem-reported band, then by region.
 - **Throughput**: attenuated Shannon model (3GPP TR 36.942), with control overhead, TDD split, MIMO rank

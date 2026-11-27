@@ -88,6 +88,8 @@ fun RadarView(
     rangeM: Double,
     units: UnitSystem,
     modifier: Modifier = Modifier,
+    /** Magnetic declination (east positive). When known with a compass, a magnetic-north marker is drawn. */
+    declinationDeg: Float? = null,
 ) {
     val transition = rememberInfiniteTransition()
     val sweep by transition.animateFloat(0f, 360f, infiniteRepeatable(tween(if (scanning) 1800 else 4200, easing = LinearEasing)))
@@ -97,6 +99,8 @@ fun RadarView(
     val labelStyle = TextStyle(color = Palette.TextFaint, fontSize = 9.sp, fontFamily = Mono)
     val cardinalStyle = TextStyle(color = Palette.TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     val northStyle = cardinalStyle.copy(color = Palette.Red)
+    val magStyle = TextStyle(color = Palette.Amber, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+    val beamLabelStyle = TextStyle(color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFamily = Mono)
     val accent = Palette.Cyan
 
     Canvas(modifier.fillMaxWidth().aspectRatio(1f)) {
@@ -114,7 +118,9 @@ fun RadarView(
             drawCircle(Palette.StrokeHi.copy(alpha = if (i == 4) 0.9f else 0.45f), r, c, style = Stroke(if (i == 4) 1.5f else 1f))
             val txt = Fmt.distance(rangeM * i / 4, units)
             val layout = measurer.measure(txt, labelStyle)
-            drawText(layout, topLeft = Offset(c.x + 4f, c.y - r + 2f))
+            // On the lower-right diagonal: labels stagger instead of colliding, and the north markers stay clear.
+            val at = polar(c, r, 135f)
+            drawText(layout, topLeft = Offset(at.x - layout.size.width - 2f, at.y - layout.size.height - 1f))
         }
         // Ticks & cardinal points (rotate with heading)
         for (d in 0 until 360 step 10) {
@@ -127,7 +133,16 @@ fun RadarView(
         }
         listOf("N" to 0f, "E" to 90f, "S" to 180f, "W" to 270f).forEach { (t, d) ->
             val layout = measurer.measure(t, if (t == "N") northStyle else cardinalStyle)
-            val p = polar(c, R + 16.dp.toPx() * 0.75f, d + rot)
+            val p = polar(c, R + 15.dp.toPx(), d + rot)
+            drawText(layout, topLeft = Offset(p.x - layout.size.width / 2f, p.y - layout.size.height / 2f))
+        }
+        // North markers: red = true north, amber = magnetic north (only shown when the compass is in use).
+        drawRingMarker(c, R, rot, Palette.Red, 6.dp.toPx())
+        if (headingDeg != null && declinationDeg != null) {
+            val m = declinationDeg + rot
+            drawRingMarker(c, R, m, Palette.Amber, 5.dp.toPx())
+            val layout = measurer.measure("MN", magStyle)
+            val p = polar(c, R - 20.dp.toPx(), m)
             drawText(layout, topLeft = Offset(p.x - layout.size.width / 2f, p.y - layout.size.height / 2f))
         }
         // Crosshair
@@ -148,6 +163,56 @@ fun RadarView(
             )
         }
         drawLine(accent.copy(alpha = 0.9f), c, polar(c, R, sweep), strokeWidth = 2f)
+
+        // Direction beam to the primary tower: wedge, core line, chevrons flowing outward, bearing tag.
+        blips.firstOrNull { it.primary && !it.ringOnly && it.bearingDeg != null }?.let { b ->
+            val bearing = b.bearingDeg!!.toFloat()
+            val a = bearing + rot
+            val half = 8f
+            val wedge = Path().apply {
+                moveTo(c.x, c.y)
+                val p0 = polar(c, R, a - half)
+                lineTo(p0.x, p0.y)
+                arcTo(
+                    androidx.compose.ui.geometry.Rect(c.x - R, c.y - R, c.x + R, c.y + R),
+                    a - half - 90f, 2 * half, false,
+                )
+                close()
+            }
+            drawPath(
+                wedge,
+                Brush.linearGradient(listOf(b.color.copy(alpha = 0.05f), b.color.copy(alpha = 0.42f)), c, polar(c, R, a)),
+            )
+            drawLine(b.color.copy(alpha = 0.95f), c, polar(c, R, a), strokeWidth = 3.dp.toPx(), cap = StrokeCap.Round)
+            for (i in 0 until 3) {
+                val f = (pulse + i / 3f) % 1f
+                val alpha = sin(f * PI.toFloat()).coerceIn(0f, 1f)
+                val tip = polar(c, R * (0.18f + 0.74f * f), a)
+                val back = R * (0.18f + 0.74f * f) - 7.dp.toPx()
+                val chevron = Path().apply {
+                    val l = polar(c, back, a - 6f); val r = polar(c, back, a + 6f)
+                    moveTo(l.x, l.y); lineTo(tip.x, tip.y); lineTo(r.x, r.y)
+                }
+                drawPath(chevron, Color.White.copy(alpha = 0.85f * alpha), style = Stroke(2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
+            // Arrowhead just outside the ring.
+            val tip = polar(c, R + 9.dp.toPx(), a)
+            val bl = polar(c, R - 1.dp.toPx(), a - 4.5f); val br = polar(c, R - 1.dp.toPx(), a + 4.5f)
+            drawPath(Path().apply { moveTo(tip.x, tip.y); lineTo(bl.x, bl.y); lineTo(br.x, br.y); close() }, b.color)
+            // Bearing tag on a pill, placed on the beam between the center and the tower.
+            val tag = measurer.measure("${((bearing % 360 + 360) % 360).toInt()}°", beamLabelStyle)
+            val tp = polar(c, R * 0.58f, a)
+            val pad = 4.dp.toPx()
+            drawRoundRect(
+                Color(0xE60A1424), Offset(tp.x - tag.size.width / 2f - pad, tp.y - tag.size.height / 2f - pad / 2),
+                Size(tag.size.width + 2 * pad, tag.size.height + pad), CornerRadius(8.dp.toPx()),
+            )
+            drawRoundRect(
+                b.color, Offset(tp.x - tag.size.width / 2f - pad, tp.y - tag.size.height / 2f - pad / 2),
+                Size(tag.size.width + 2 * pad, tag.size.height + pad), CornerRadius(8.dp.toPx()), style = Stroke(1.dp.toPx()),
+            )
+            drawText(tag, topLeft = Offset(tp.x - tag.size.width / 2f, tp.y - tag.size.height / 2f))
+        }
 
         // Blips
         blips.forEach { b ->
@@ -188,6 +253,14 @@ fun RadarView(
         drawCircle(Color.White, 7f, c)
         drawCircle(Palette.Blue, 5f, c)
     }
+}
+
+/** Small inward-pointing triangle sitting on the outer ring at [deg]. */
+private fun DrawScope.drawRingMarker(c: Offset, r: Float, deg: Float, color: Color, len: Float) {
+    val tip = polar(c, r - 1f, deg)
+    val spread = len / r * 180f / PI.toFloat() * 0.7f
+    val l = polar(c, r + len, deg - spread); val rr = polar(c, r + len, deg + spread)
+    drawPath(Path().apply { moveTo(tip.x, tip.y); lineTo(l.x, l.y); lineTo(rr.x, rr.y); close() }, color)
 }
 
 private fun DrawScope.drawTowerGlyph(p: Offset, color: Color, s: Float) {

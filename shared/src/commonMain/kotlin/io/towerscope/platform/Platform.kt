@@ -19,8 +19,17 @@ interface PlatformServices {
 
     fun locationFixes(): Flow<GeoFix>
 
-    /** Device heading in degrees clockwise from true north. May never emit if no compass. */
+    /**
+     * Device heading in degrees clockwise from north. May never emit if no compass.
+     * It is referenced to true north once [declinationDeg] is known, and to magnetic north before that.
+     */
     fun headings(): Flow<Float>
+
+    /**
+     * Magnetic declination at the current position in degrees (east positive: magnetic north lies east
+     * of true north), or null while unknown. Read alongside each heading.
+     */
+    val declinationDeg: Float? get() = null
 
     fun createHttpClient(): HttpClient
 

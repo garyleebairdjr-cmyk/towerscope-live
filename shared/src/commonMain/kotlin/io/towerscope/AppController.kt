@@ -62,6 +62,10 @@ class AppController(val platform: PlatformServices) {
     private val _heading = MutableStateFlow<Float?>(null)
     val heading: StateFlow<Float?> = _heading.asStateFlow()
 
+    private val _declination = MutableStateFlow<Float?>(null)
+    /** Magnetic declination (east positive) once known; while null, [heading] is magnetic. */
+    val declination: StateFlow<Float?> = _declination.asStateFlow()
+
     private val _history = MutableStateFlow<List<SignalSample>>(emptyList())
     val history: StateFlow<List<SignalSample>> = _history.asStateFlow()
 
@@ -123,7 +127,10 @@ class AppController(val platform: PlatformServices) {
         if (permissions.value.coreGranted) startSensors()
         if (headingJob == null) {
             headingJob = scope.launch {
-                platform.headings().catch { }.collect { _heading.value = it }
+                platform.headings().catch { }.collect {
+                    _declination.value = platform.declinationDeg
+                    _heading.value = it
+                }
             }
         }
     }

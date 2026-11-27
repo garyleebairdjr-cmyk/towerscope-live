@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.towerscope.AppController
@@ -34,6 +35,7 @@ import io.towerscope.calc.Fmt
 import io.towerscope.calc.Geo
 import io.towerscope.calc.SignalQuality
 import io.towerscope.calc.fmt
+import kotlin.math.abs
 import io.towerscope.data.UnitSystem
 import io.towerscope.model.Transport
 import io.towerscope.ui.Navigator
@@ -68,6 +70,7 @@ fun OverviewScreen(controller: AppController, nav: Navigator) {
     val snapshot by controller.snapshot.collectAsState()
     val fix by controller.fix.collectAsState()
     val heading by controller.heading.collectAsState()
+    val declination by controller.declination.collectAsState()
     val settings by controller.settings.collectAsState()
     val nearby by controller.nearby.collectAsState()
     val radioError by controller.radioError.collectAsState()
@@ -150,9 +153,25 @@ fun OverviewScreen(controller: AppController, nav: Navigator) {
                 }
             }
             Box(contentAlignment = Alignment.Center) {
-                RadarView(blips, heading, scanning = snapshot == null || serving == null, rangeM = range, units = units, modifier = Modifier.padding(top = 8.dp))
+                RadarView(
+                    blips, heading, scanning = snapshot == null || serving == null, rangeM = range, units = units,
+                    modifier = Modifier.padding(top = 8.dp), declinationDeg = declination,
+                )
                 if (snapshot == null) ScanningLabel("ACQUIRING SIGNAL…", Modifier.align(Alignment.BottomCenter))
             }
+            blips.firstOrNull { it.primary && !it.ringOnly && it.bearingDeg != null }?.let { b ->
+                val bearing = b.bearingDeg!!
+                val turn = heading?.let { h ->
+                    val rel = Geo.angleDelta(h.toDouble(), bearing)
+                    if (abs(rel) < 10) "you're facing it" else "turn ${abs(rel).fmt(0)}° ${if (rel > 0) "right" else "left"}"
+                }
+                Text(
+                    "Tower ${bearing.fmt(0)}° ${Geo.cardinal(bearing)}" + (turn?.let { " · $it" } ?: ""),
+                    fontSize = 15.sp, fontWeight = FontWeight.Bold, color = b.color,
+                    modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
+                )
+            }
+            NorthLegend(heading != null, declination)
             if (serving != null && serving.bearingDeg == null && best != null && best.method != DistanceMethod.GPS_DATABASE) {
                 Text(
                     if (settings.hasApiKey) "Dashed ring: distance known, direction unknown (tower not in database yet)."
@@ -290,4 +309,21 @@ private fun QuickStat(label: String, value: String, unit: String, color: android
             Text(unit, style = TextStyles.unit, modifier = Modifier.padding(bottom = 2.dp))
         }
     }
+}
+
+/** Explains which north the radar is drawn against. */
+@Composable
+private fun NorthLegend(compass: Boolean, declination: Float?) {
+    val text = when {
+        !compass -> "North is at the top (no compass reading)"
+        declination == null -> "N is magnetic north until GPS has a fix, then true north"
+        else -> {
+            val side = if (declination >= 0) "E" else "W"
+            "Red N = true north · amber MN = magnetic north, ${abs(declination).fmt(1)}° $side here"
+        }
+    }
+    Text(
+        text, fontSize = 11.sp, color = Palette.TextFaint,
+        modifier = Modifier.fillMaxWidth().padding(top = 4.dp), textAlign = TextAlign.Center,
+    )
 }
