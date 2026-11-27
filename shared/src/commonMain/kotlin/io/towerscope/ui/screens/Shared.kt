@@ -51,7 +51,8 @@ fun rememberLiveAnalysis(controller: AppController): LiveAnalysis {
     val lookups by controller.lookups.collectAsState()
     val fix by controller.fix.collectAsState()
     val settings by controller.settings.collectAsState()
-    return remember(snapshot, lookups, fix, settings) {
+    val nearby by controller.nearby.collectAsState()
+    return remember(snapshot, lookups, fix, settings, nearby) {
         val s = snapshot ?: return@remember LiveAnalysis(null, emptyList(), emptyList())
         val serving = s.serving
         LiveAnalysis(

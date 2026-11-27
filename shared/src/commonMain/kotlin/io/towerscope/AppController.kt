@@ -374,7 +374,7 @@ class AppController(val platform: PlatformServices) {
     }
 
     fun analyze(cell: CellObservation): CellAnalysis =
-        Analyzer.analyze(cell, _lookups.value[cell.identity.key], _fix.value, _settings.value, _snapshot.value?.network)
+        Analyzer.analyze(cell, _lookups.value[cell.identity.key], _fix.value, _settings.value, _snapshot.value?.network, _nearby.value.towers)
 
     fun openUrl(url: String) = platform.openUrl(url)
 

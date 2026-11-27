@@ -1,7 +1,9 @@
 package io.towerscope.calc
 
 import io.towerscope.data.AppSettings
+import io.towerscope.model.CellIdentity
 import io.towerscope.model.CellObservation
+import io.towerscope.model.DatabaseTower
 import io.towerscope.model.GeoFix
 import io.towerscope.model.NetworkStatus
 import io.towerscope.model.RadioType
@@ -74,6 +76,8 @@ object Analyzer {
         fix: GeoFix?,
         settings: AppSettings,
         network: NetworkStatus?,
+        /** Towers from the area search; used to find another sector of the same tower. */
+        nearbyTowers: List<DatabaseTower> = emptyList(),
     ): CellAnalysis {
         val id = obs.identity
         val s = obs.signal
@@ -84,6 +88,12 @@ object Analyzer {
             lookup is TowerLookup.Found -> lookup.location
             id.broadcastLat != null && id.broadcastLon != null ->
                 TowerLocation(id.broadcastLat, id.broadcastLon, null, null, "Network broadcast")
+            lookup is TowerLookup.NotFound -> sameTowerSibling(id, nearbyTowers)?.let { sib ->
+                sib.location.copy(
+                    source = "OpenCelliD, sector ${sib.identity.cellId!! and 0xFF} of the same tower",
+                    siblingSector = (sib.identity.cellId and 0xFF).toInt(),
+                )
+            }
             else -> null
         }
 
@@ -95,6 +105,7 @@ object Analyzer {
             val unc = sqrt((fix.accuracyM ?: 20.0).let { it * it } + (tower.rangeM?.let { minOf(it, 2000.0) * 0.25 } ?: 150.0).let { it * it })
             val conf = when {
                 tower.source == "Network broadcast" -> Confidence.HIGH
+                tower.siblingSector != null -> Confidence.LOW
                 (tower.samples ?: 0) >= 20 -> Confidence.HIGH
                 (tower.samples ?: 0) >= 3 -> Confidence.MEDIUM
                 else -> Confidence.LOW
@@ -148,9 +159,14 @@ object Analyzer {
             )
         }
 
-        val best = distances.firstOrNull { it.method == DistanceMethod.GPS_DATABASE || it.method == DistanceMethod.BROADCAST }
-            ?: distances.firstOrNull { it.method == DistanceMethod.TIMING_ADVANCE }
-            ?: distances.firstOrNull { it.method == DistanceMethod.PATH_LOSS }
+        val positional = distances.firstOrNull { it.method == DistanceMethod.GPS_DATABASE || it.method == DistanceMethod.BROADCAST }
+        val timing = distances.firstOrNull { it.method == DistanceMethod.TIMING_ADVANCE }
+        // A database position from one or two reports (or another sector) can be off by hundreds of metres,
+        // while timing advance is good to ±78 m on LTE. Prefer the timing measurement over a weak position.
+        val best = when {
+            positional != null && timing != null && tower != null && isWeakPosition(tower) -> timing
+            else -> positional ?: timing ?: distances.firstOrNull { it.method == DistanceMethod.PATH_LOSS }
+        }
 
         val bearing = if (tower != null && fix != null) Geo.bearingDeg(fix.lat, fix.lon, tower.lat, tower.lon) else null
 
@@ -185,6 +201,30 @@ object Analyzer {
             noiseFloorPerReDbm = noisePerRe,
             noiseLimitedSnrDb = (s.rsrp ?: if (id.radio == RadioType.LTE || id.radio == RadioType.NR) s.dbm else null)?.let { it - noisePerRe },
         )
+    }
+
+    /** Fewer than 3 reports, a stated range over 2 km, or another sector's position. Broadcast positions are never weak. */
+    fun isWeakPosition(t: TowerLocation): Boolean =
+        t.source != "Network broadcast" &&
+            (t.siblingSector != null || (t.samples ?: 0) < WEAK_SAMPLES || (t.rangeM ?: 0.0) > WEAK_RANGE_M)
+
+    private const val WEAK_SAMPLES = 3
+    private const val WEAK_RANGE_M = 2000.0
+
+    /**
+     * Another sector of the same LTE tower in the area search: same network and eNB (ECI ÷ 256), most
+     * reports first. Only LTE, where the eNB/sector split is fixed; NR gNB ID lengths vary by network.
+     */
+    fun sameTowerSibling(id: CellIdentity, towers: List<DatabaseTower>): DatabaseTower? {
+        if (id.radio != RadioType.LTE || id.cellId == null || id.mcc == null || id.mnc == null) return null
+        val enb = id.cellId shr 8
+        return towers
+            .filter { t ->
+                val o = t.identity
+                o.radio == RadioType.LTE && o.mcc == id.mcc && o.mnc == id.mnc &&
+                    o.cellId != null && o.cellId != id.cellId && (o.cellId shr 8) == enb
+            }
+            .maxByOrNull { it.location.samples ?: 0 }
     }
 
     /** Break network identifiers into their engineering components. */

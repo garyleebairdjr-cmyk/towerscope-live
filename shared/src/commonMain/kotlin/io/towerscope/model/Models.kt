@@ -171,6 +171,11 @@ data class TowerLocation(
     val samples: Int? = null,
     val source: String,
     val updatedEpochSec: Long? = null,
+    /**
+     * Set when the exact cell isn't in the database and this is the position of another sector of the
+     * same tower (same eNB). Positions are per-sector averages, so treat it as a rough fix.
+     */
+    val siblingSector: Int? = null,
 )
 
 /** A tower record from the area database (not necessarily seen by this phone). */

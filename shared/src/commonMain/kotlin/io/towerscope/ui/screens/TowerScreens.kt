@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import io.towerscope.AppController
 import io.towerscope.calc.Analyzer
 import io.towerscope.calc.CellAnalysis
+import io.towerscope.calc.DistanceMethod
 import io.towerscope.calc.Fmt
 import io.towerscope.calc.Geo
 import io.towerscope.calc.MetricKind
@@ -232,16 +233,21 @@ private fun CellCard(a: CellAnalysis, units: UnitSystem, lookup: TowerLookup?, o
             MiniStat("Distance", Fmt.distance(a.bestDistance?.meters, units), "")
             MiniStat("Bearing", a.bearingDeg?.let { "${it.fmt(0)}° ${Geo.cardinal(it)}" } ?: "—", "")
         }
-        lookupStatus(lookup)?.let {
+        lookupStatus(lookup, a)?.let {
             Spacer(Modifier.height(8.dp))
             Text(it, fontSize = 11.sp, color = Palette.TextFaint)
         }
     }
 }
 
-private fun lookupStatus(l: TowerLookup?): String? = when (l) {
+private fun lookupStatus(l: TowerLookup?, a: CellAnalysis): String? = when (l) {
     TowerLookup.Loading -> "Looking up tower position…"
-    TowerLookup.NotFound -> "Tower not in OpenCelliD yet — using radio-based distance estimates"
+    TowerLookup.NotFound -> a.tower?.siblingSector?.let {
+        "This sector isn't in OpenCelliD, so the position comes from sector $it of the same tower. Treat it as rough."
+    } ?: "Tower not in OpenCelliD yet — using radio-based distance estimates"
+    is TowerLookup.Found -> if (a.tower != null && Analyzer.isWeakPosition(a.tower) && a.bestDistance?.method == DistanceMethod.TIMING_ADVANCE)
+        "OpenCelliD has only a rough position for this tower, so the distance shown is from timing advance."
+    else null
     TowerLookup.NoApiKey -> "Add an OpenCelliD key to locate this tower"
     is TowerLookup.Failed -> "Lookup failed: ${l.message}"
     TowerLookup.NotLookupable -> "Incomplete identity — tower can't be looked up"
@@ -335,7 +341,7 @@ fun CellDetailScreen(controller: AppController, nav: Navigator, key: String) {
             }
         }
 
-        lookupStatus(lookups[id.key])?.let { InfoNote(it, icon = Icons.Rounded.Info) }
+        lookupStatus(lookups[id.key], a)?.let { InfoNote(it, icon = Icons.Rounded.Info) }
         if (lookups[id.key] is TowerLookup.Failed) {
             OutlinedButton(onClick = { controller.retryLookup(a.obs) }) { Text("Retry lookup") }
         }
