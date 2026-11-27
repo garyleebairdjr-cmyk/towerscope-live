@@ -44,6 +44,7 @@ import io.towerscope.calc.Fmt
 import io.towerscope.calc.Geo
 import io.towerscope.calc.MetricKind
 import io.towerscope.calc.RfModels
+import io.towerscope.calc.SettingsTarget
 import io.towerscope.calc.SignalQuality
 import io.towerscope.calc.fmt
 import io.towerscope.data.UnitSystem
@@ -106,6 +107,7 @@ fun TowersScreen(controller: AppController, nav: Navigator) {
                     }
                 }
             }
+            if (serving.isNotEmpty()) SwitchTowerCard(controller)
         } else {
             when {
                 nearby.needsKey || !settings.hasApiKey -> ApiKeyPrompt { nav.push(Route.Settings) }
@@ -151,6 +153,41 @@ fun TowersScreen(controller: AppController, nav: Navigator) {
     }
 }
 
+/**
+ * Phones and carriers choose the tower; no app can pick one. These are the two settings a person can
+ * change to make the phone choose again. Apps can't flip them, only open the page.
+ */
+@Composable
+private fun SwitchTowerCard(controller: AppController) {
+    SectionHeader("Switch towers", subtitle = "Your phone and carrier choose the tower. You can make it choose again.")
+    GlassCard(Modifier.fillMaxWidth()) {
+        Text(
+            "Airplane mode: turn it on, wait about 10 seconds, then turn it off. The phone searches again and often " +
+                "lands on a stronger cell.",
+            fontSize = 13.sp, color = Palette.TextDim, lineHeight = 18.sp,
+        )
+        Spacer(Modifier.height(8.dp))
+        SettingsButton("Open airplane mode") { controller.openSystemSettings(SettingsTarget.AIRPLANE_MODE) }
+        Spacer(Modifier.height(14.dp))
+        Text(
+            "Network mode: if 5G is weak, choose LTE. That often moves you to a stronger tower. Set it back when you " +
+                "move somewhere else.",
+            fontSize = 13.sp, color = Palette.TextDim, lineHeight = 18.sp,
+        )
+        Spacer(Modifier.height(8.dp))
+        SettingsButton("Open network mode") { controller.openSystemSettings(SettingsTarget.NETWORK_MODE) }
+    }
+}
+
+@Composable
+private fun SettingsButton(label: String, onClick: () -> Unit) {
+    OutlinedButton(onClick = onClick) {
+        Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, Modifier.size(16.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(label)
+    }
+}
+
 @Composable
 private fun ApiKeyPrompt(onOpenSettings: () -> Unit) {
     GlassCard(Modifier.fillMaxWidth(), accent = Palette.Amber) {
@@ -162,7 +199,8 @@ private fun ApiKeyPrompt(onOpenSettings: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         Text(
             "Phones report which cell they are using, but not where the tower is. TowerScope looks tower positions up in " +
-                "OpenCelliD, the largest open cell-tower database. A key is free — sign up at opencellid.org and paste it in Settings.",
+                "OpenCelliD, the largest open cell-tower database. A key is free and takes a minute: sign up with your email, " +
+                "tap the link OpenCelliD emails you, then copy your access token into the API key field in Settings.",
             fontSize = 13.sp, color = Palette.TextDim, lineHeight = 18.sp,
         )
         Spacer(Modifier.height(12.dp))

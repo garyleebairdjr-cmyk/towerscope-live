@@ -57,6 +57,7 @@ class AndroidPlatform(context: Context) : PlatformServices {
     )
 
     override val store: KeyValueStore = object : KeyValueStore {
+        // Don't rename: app updates keep this file, so a new name would lose saved settings and the API key.
         private val prefs = app.getSharedPreferences("towerscope", Context.MODE_PRIVATE)
         override fun getString(key: String): String? = prefs.getString(key, null)
         override fun putString(key: String, value: String?) {
