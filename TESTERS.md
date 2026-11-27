@@ -44,6 +44,9 @@ You don't need to do all of this. Anything you notice helps.
 
 - [ ] It installs from Google Play without trouble.
 - [ ] The first screen explains why the app wants location, before Android asks you.
+- [ ] Android words the optional phone permission as "make and manage phone calls". That's Android's
+      label for it; TowerScope only reads the network type and 5G details, never calls. Allowing or
+      denying it are both fine, and I'd like to hear if the wording put you off.
 - [ ] The Overview shows your tower, with a distance and a direction.
 - [ ] The Signal tab shows live readings and a chart that grows while the app is open.
 - [ ] The Towers tab lists cells your phone can hear.

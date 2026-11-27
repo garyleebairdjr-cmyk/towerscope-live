@@ -19,6 +19,9 @@ interface PlatformServices {
 
     fun locationFixes(): Flow<GeoFix>
 
+    /** Location fixes no more often than [intervalMs]; used to save battery while recording with the app closed. */
+    fun locationFixes(intervalMs: Long): Flow<GeoFix> = locationFixes()
+
     /**
      * Device heading in degrees clockwise from north. May never emit if no compass.
      * It is referenced to true north once [declinationDeg] is known, and to magnetic north before that.

@@ -56,8 +56,8 @@ closed, but only when you turn on background recording, which shows a notificati
 ## The phone permission
 
 Both editions ask for the phone permission (`READ_PHONE_STATE`), and it's optional in both. Android needs it
-for the network type, whether 5G is active, and carrier-aggregation bandwidths. TowerScope never uses
-it to read your number, calls or contacts, and it works without it, with fewer details.
+for the network type, whether 5G is active, and carrier-aggregation bandwidths. Android's dialog calls it "make and manage phone calls", but
+TowerScope never uses it to read your number, calls or contacts, and it works without it, with fewer details.
 
 ## Privacy
 

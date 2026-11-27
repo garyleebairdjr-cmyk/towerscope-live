@@ -51,6 +51,8 @@ class PlayLicenseManager(
     private var client: BillingClient? = null
     private var activity: WeakReference<Activity>? = null
     private var product: ProductDetails? = null
+    /** Play answered but has no such product (not created in Play Console, or this build isn't from Play). */
+    private var productMissing = false
 
     fun connect(activity: Activity) {
         this.activity = WeakReference(activity)
@@ -95,7 +97,13 @@ class PlayLicenseManager(
         if (c == null || act == null || !_state.value.billingReady) { retryConnection(); return }
         if (details == null) {
             loadProduct()
-            _state.update { it.copy(message = "Getting the price from Google Play. Try again in a moment.") }
+            _state.update {
+                it.copy(
+                    message = if (productMissing) "The unlock isn't available from Google Play on this copy of the app yet. " +
+                        "If you installed TowerScope from Google Play, please try again later."
+                    else "Getting the price from Google Play. Try again in a moment.",
+                )
+            }
             return
         }
         val offer = details.oneTimePurchaseOfferDetailsList?.firstOrNull()?.offerToken
@@ -150,7 +158,9 @@ class PlayLicenseManager(
             .build()
         c.queryProductDetailsAsync(params) { result, details ->
             if (result.responseCode != BillingResponseCode.OK) return@queryProductDetailsAsync
-            val pd = details.productDetailsList.firstOrNull { it.productId == PRODUCT_ID } ?: return@queryProductDetailsAsync
+            val pd = details.productDetailsList.firstOrNull { it.productId == PRODUCT_ID }
+            productMissing = pd == null
+            if (pd == null) return@queryProductDetailsAsync
             product = pd
             val price = pd.oneTimePurchaseOfferDetailsList?.firstOrNull()?.formattedPrice ?: pd.oneTimePurchaseOfferDetails?.formattedPrice
             _state.update { it.copy(price = price) }

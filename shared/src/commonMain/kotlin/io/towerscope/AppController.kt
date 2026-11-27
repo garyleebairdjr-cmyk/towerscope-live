@@ -249,13 +249,16 @@ class AppController(val platform: PlatformServices) {
         }
         if (locationJob == null) {
             locationJob = scope.launch {
-                platform.locationFixes().catch { }.collect { onFix(it) }
+                // With the app closed (background recording), a fix every 30 s is plenty for once-a-minute history.
+                val interval = if (started) FOREGROUND_LOCATION_MS else BACKGROUND_INTERVAL_MS + 10_000L
+                platform.locationFixes(interval).catch { }.collect { onFix(it) }
             }
         }
     }
 
     private fun restartRadio() {
         radioJob?.cancel(); radioJob = null
+        locationJob?.cancel(); locationJob = null
         if ((started || backgroundActive) && permissions.value.coreGranted) startSensors()
     }
 
@@ -546,6 +549,7 @@ class AppController(val platform: PlatformServices) {
         const val FAST_INTERVAL_MS = 1_000L
         /** History keeps about one reading a minute, so the radio needn't be read often with the app closed. */
         const val BACKGROUND_INTERVAL_MS = 20_000L
+        const val FOREGROUND_LOCATION_MS = 2_000L
     }
 }
 

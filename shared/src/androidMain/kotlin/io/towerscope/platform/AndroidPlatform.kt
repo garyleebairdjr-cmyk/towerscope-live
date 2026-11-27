@@ -83,7 +83,10 @@ class AndroidPlatform(context: Context) : PlatformServices {
     override fun radioSnapshots(intervalMs: Long): Flow<RadioSnapshot> = radio.snapshots(intervalMs)
 
     @SuppressLint("MissingPermission")
-    override fun locationFixes(): Flow<GeoFix> = callbackFlow {
+    override fun locationFixes(): Flow<GeoFix> = locationFixes(2000L)
+
+    @SuppressLint("MissingPermission")
+    override fun locationFixes(intervalMs: Long): Flow<GeoFix> = callbackFlow {
         val lm = app.getSystemService(LocationManager::class.java)
         var best: Location? = null
 
@@ -116,7 +119,7 @@ class AndroidPlatform(context: Context) : PlatformServices {
 
         try {
             providers.mapNotNull { lm.getLastKnownLocation(it) }.maxByOrNull { it.time }?.let { offer(it) }
-            providers.forEach { lm.requestLocationUpdates(it, 2000L, 0f, listener, Looper.getMainLooper()) }
+            providers.forEach { lm.requestLocationUpdates(it, intervalMs, 0f, listener, Looper.getMainLooper()) }
         } catch (e: SecurityException) {
             close(e)
         }

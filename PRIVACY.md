@@ -26,7 +26,7 @@ The app explains each permission on its own screen first, and Android only asks 
 | Permission | What it's used for |
 |---|---|
 | Location (precise) | Android only tells an app which cell tower the phone is connected to when the app has precise location. TowerScope also uses your position to work out the distance and direction to the tower. Used only while the app is open. |
-| Phone (`READ_PHONE_STATE`) | Optional. Reads the network type (for example LTE or 5G), whether 5G is active, and carrier-aggregation bandwidths. It is never used to read your phone number, calls, contacts or call log, and never to identify you. The app works without it, with fewer details. |
+| Phone (`READ_PHONE_STATE`) | Optional. Android's dialog calls this "make and manage phone calls", but TowerScope only reads the network type (for example LTE or 5G), whether 5G is active, and carrier-aggregation bandwidths. It is never used to read your phone number, calls, contacts or call log, and never to identify you. The app works without it, with fewer details. |
 | Internet and network state | Tower lookups (if you add an OpenCelliD key), speed tests you start, and telling Wi-Fi from mobile data. |
 | Google Play billing | The one-time unlock described below. |
 

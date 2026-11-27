@@ -115,7 +115,7 @@ fun PermissionCard(controller: AppController) {
         PermissionLine(Icons.Rounded.LocationOn, "Precise location", "Android requires it to read tower IDs; also used for distance and direction, only while the app is open", perms.location)
         if (perms.phoneStateApplicable) {
             Spacer(Modifier.height(8.dp))
-            PermissionLine(Icons.Rounded.PhoneAndroid, "Phone state", "Optional. Network type, 5G status and carrier aggregation. Never your number, calls or contacts", perms.phoneState)
+            PermissionLine(Icons.Rounded.PhoneAndroid, "Phone state", "Optional. Network type, 5G status and carrier aggregation. Android calls this \"make and manage phone calls\", but the app never reads your number, calls or contacts", perms.phoneState, optional = true)
         }
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -131,7 +131,7 @@ fun PermissionCard(controller: AppController) {
 }
 
 @Composable
-private fun PermissionLine(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, body: String, granted: Boolean) {
+private fun PermissionLine(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, body: String, granted: Boolean, optional: Boolean = false) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, tint = if (granted) Palette.Green else Palette.TextDim, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(10.dp))
@@ -139,7 +139,10 @@ private fun PermissionLine(icon: androidx.compose.ui.graphics.vector.ImageVector
             Text(title, fontSize = 14.sp, color = Palette.Text, fontWeight = FontWeight.Medium)
             Text(body, fontSize = 12.sp, color = Palette.TextFaint)
         }
-        Text(if (granted) "Granted" else "Needed", fontSize = 12.sp, color = if (granted) Palette.Green else Palette.Amber)
+        Text(
+            when { granted -> "Granted"; optional -> "Optional"; else -> "Needed" }, fontSize = 12.sp,
+            color = when { granted -> Palette.Green; optional -> Palette.TextDim; else -> Palette.Amber },
+        )
     }
 }
 
