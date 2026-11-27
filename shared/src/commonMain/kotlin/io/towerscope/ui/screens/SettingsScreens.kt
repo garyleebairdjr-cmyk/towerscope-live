@@ -84,9 +84,9 @@ fun SettingsScreen(controller: AppController) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     "How to get one (free):\n" +
-                        "1. Tap Get a free key and enter your email address.\n" +
-                        "2. Open the email from OpenCelliD and tap its link. That signs you in.\n" +
-                        "3. Copy your access token. It starts with pk.\n" +
+                        "1. Tap Get a free key, enter your email address and tap Login with email (new? tap Sign-up for free).\n" +
+                        "2. Open the email titled OpenCelliD Project magic link and tap click here. That signs you in.\n" +
+                        "3. On the dashboard, open Access Tokens and copy your token. It starts with pk.\n" +
                         "4. Come back here, paste it into API key and tap Save key.",
                     fontSize = 12.sp, color = Palette.TextDim, lineHeight = 18.sp,
                 )

@@ -115,13 +115,14 @@ Phones report *which* cell they're using, but not *where* the tower is. To get t
 looks them up in [OpenCelliD](https://opencellid.org). A key is free:
 
 1. In TowerScope, open **Settings → Tower database** and tap **Get a free key**.
-2. Enter your email address.
-3. Open the email from OpenCelliD and tap its link. That signs you in.
-4. Copy your **access token** (it starts with `pk.`).
+2. Enter your email address and tap **LOGIN WITH EMAIL** (or **Sign-up for free** if you're new).
+3. Open the email titled *OpenCelliD Project magic link* and tap **click here**. That signs you in.
+4. On the dashboard, open **Access Tokens** and copy your token (it starts with `pk.`).
 5. Back in TowerScope, paste it into the **API key** field and tap **Save key**.
 
 OpenCelliD calls it an access token; the app calls it an API key. They're the same thing. The key is
 stored only on the device, is excluded from backup, and is kept when you update the app.
+There's a [step-by-step guide with pictures](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki/Getting-an-OpenCelliD-Key).
 
 Without a key, distance still works through timing advance and the path-loss model. The radar then shows a
 dashed ring (the distance is known, the direction isn't).
