@@ -33,4 +33,21 @@ class SettingsTest {
         assertEquals("pk.abc", repo.load().openCellIdKey)
         assertEquals("pk.abc", store.map["ocid_key"])
     }
+
+    @Test
+    fun historyIsOptInOnAFreshInstall() {
+        val s = SettingsRepository(MapStore()).load()
+        assertEquals(false, s.recordHistory)
+        assertEquals(HistoryLocation.APPROXIMATE, s.historyLocation)
+        assertEquals(false, s.backgroundRecording)
+    }
+
+    @Test
+    fun someoneWhoAlreadyRecordsKeepsTheirChoice() {
+        // Versions up to 0.9.11 saved every setting, history included, whenever any setting changed.
+        val store = MapStore(mutableMapOf("record_history" to "true", "history_location" to "EXACT"))
+        val s = SettingsRepository(store).load()
+        assertEquals(true, s.recordHistory)
+        assertEquals(HistoryLocation.EXACT, s.historyLocation)
+    }
 }

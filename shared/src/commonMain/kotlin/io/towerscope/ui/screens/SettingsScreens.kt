@@ -155,7 +155,9 @@ fun SettingsScreen(controller: AppController, nav: io.towerscope.ui.Navigator) {
             Text("Android may throttle cell updates; faster intervals use more battery.", fontSize = 11.sp, color = Palette.TextFaint)
         }
 
-        GlassCard(Modifier.fillMaxWidth()) {
+        controller.license?.let { UnlockCard(it, controller.platform.nowMs()) }
+
+        if (io.towerscope.platform.FeatureFlags.current.allowHistoryLogging) GlassCard(Modifier.fillMaxWidth()) {
             SectionHeader("History", subtitle = "Signal and speed over time, kept on this phone")
             io.towerscope.ui.components.DrillRow(
                 title = "History & patterns",
@@ -166,6 +168,7 @@ fun SettingsScreen(controller: AppController, nav: io.towerscope.ui.Navigator) {
         GlassCard(Modifier.fillMaxWidth()) {
             SectionHeader("About")
             KeyValueRow("App", "TowerScope Live " + (controller.platform.appVersion ?: ""))
+            Divider(); KeyValueRow("Edition", if (io.towerscope.platform.FeatureFlags.current.isPlayEdition) "Google Play" else "Open source")
             Divider(); KeyValueRow("Tower data", "OpenCelliD (CC BY-SA 4.0)")
             Divider(); KeyValueRow("Speed test", "speed.cloudflare.com")
             Spacer(Modifier.height(6.dp))

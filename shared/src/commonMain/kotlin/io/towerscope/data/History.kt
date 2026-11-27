@@ -195,3 +195,52 @@ class KeyValueHistoryFile(private val store: io.towerscope.platform.KeyValueStor
         const val MAX_CHARS = 400_000
     }
 }
+
+/** History as a CSV spreadsheet, for the person to share or save (open-source edition, on request only). */
+object HistoryCsv {
+    const val HEADER = "time_utc,local_hour,kind,latitude,longitude,cell,radio,signal_dbm,sinr_db,rsrq_db," +
+        "download_mbps,upload_mbps,ping_ms,cellular,phone"
+
+    fun encode(records: List<HistoryRecord>): String = buildString {
+        append(HEADER).append('\n')
+        records.forEach { r ->
+            val common = listOf(utcIso(r.timestampMs), r.localHour.toString())
+            val rest = when (r) {
+                is SignalRecord -> listOf(
+                    "signal", r.lat.s(), r.lon.s(), r.cellKey.orEmpty(), r.radio.name, r.signalDbm.toString(),
+                    r.sinrDb.s(), r.rsrqDb?.toString().orEmpty(), "", "", "", "", r.device.orEmpty(),
+                )
+                is SpeedRecord -> listOf(
+                    "speed_test", r.lat.s(), r.lon.s(), r.cellKey.orEmpty(), "", "", "", "",
+                    r.downMbps.s(), r.upMbps.s(), r.pingMs.s(), if (r.cellular) "yes" else "no", r.device.orEmpty(),
+                )
+            }
+            (common + rest).joinTo(this, ",") { quote(it) }
+            append('\n')
+        }
+    }
+
+    private fun Double?.s(): String = this?.toString().orEmpty()
+
+    private fun quote(v: String): String =
+        if (v.any { it == ',' || it == '"' || it == '\n' }) "\"" + v.replace("\"", "\"\"") + "\"" else v
+
+    /** "2026-11-27T20:15:03Z", without a date library. */
+    fun utcIso(epochMs: Long): String {
+        val secs = epochMs.floorDiv(1000)
+        val days = secs.floorDiv(86_400)
+        val sod = secs - days * 86_400
+        // Civil date from days since 1970-01-01 (Howard Hinnant's algorithm).
+        val z = days + 719_468
+        val era = z.floorDiv(146_097)
+        val doe = z - era * 146_097
+        val yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365
+        val doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+        val mp = (5 * doy + 2) / 153
+        val d = doy - (153 * mp + 2) / 5 + 1
+        val m = if (mp < 10) mp + 3 else mp - 9
+        val y = yoe + era * 400 + if (m <= 2) 1 else 0
+        fun p2(n: Long) = n.toString().padStart(2, '0')
+        return "$y-${p2(m)}-${p2(d)}T${p2(sod / 3600)}:${p2(sod % 3600 / 60)}:${p2(sod % 60)}Z"
+    }
+}

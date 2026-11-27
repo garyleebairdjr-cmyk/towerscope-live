@@ -290,7 +290,7 @@ fun OverviewScreen(controller: AppController, nav: Navigator) {
             }
         }
         val longHistory by controller.longHistory.collectAsState()
-        GlassCard(Modifier.fillMaxWidth()) {
+        if (io.towerscope.platform.FeatureFlags.current.allowHistoryLogging) GlassCard(Modifier.fillMaxWidth()) {
             io.towerscope.ui.components.DrillRow(
                 title = "History & patterns",
                 subtitle = when {

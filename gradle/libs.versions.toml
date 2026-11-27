@@ -9,6 +9,8 @@ serialization = "1.13.0"
 ktor = "3.6.2"
 activity-compose = "1.13.0"
 core-ktx = "1.19.1"
+billing = "9.1.0"
+fragment = "1.9.1"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -25,6 +27,8 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "kto
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
+billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billing" }
+androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 
 [plugins]

@@ -101,25 +101,28 @@ fun PermissionCard(controller: AppController) {
             Text("Permissions needed", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Palette.Text)
         }
         Spacer(Modifier.height(10.dp))
+        val flags = io.towerscope.platform.FeatureFlags.current
         Text(
-            "TowerScope Live reads the cell towers your phone can hear and pairs them with GPS to locate them. " +
-                "Your readings stay on this phone, where it keeps a history (with your location) to learn where and when " +
-                "your signal is best. You can change or turn that off under History & patterns. The only things sent " +
-                "anywhere are tower lookups to OpenCelliD (only if you add a key) and speed tests you start.",
+            "TowerScope Live reads the cell towers your phone can hear and pairs them with your location to show how far " +
+                "away they are and which way to face. It only does this while the app is open. " +
+                (if (flags.allowHistoryLogging) "Nothing is kept after you close it unless you turn on History & patterns. "
+                else "It doesn't keep a record of where you've been. ") +
+                "The only things sent anywhere are tower lookups to OpenCelliD (only if you add a key) and speed tests you start. " +
+                "Android will ask next; nothing is requested until you tap the button.",
             fontSize = 13.sp, color = Palette.TextDim, lineHeight = 18.sp,
         )
         Spacer(Modifier.height(14.dp))
-        PermissionLine(Icons.Rounded.LocationOn, "Precise location", "Required by the OS to read cell IDs; used for distance & bearing", perms.location)
+        PermissionLine(Icons.Rounded.LocationOn, "Precise location", "Android requires it to read tower IDs; also used for distance and direction, only while the app is open", perms.location)
         if (perms.phoneStateApplicable) {
             Spacer(Modifier.height(8.dp))
-            PermissionLine(Icons.Rounded.PhoneAndroid, "Phone state", "Network type, 5G status, carrier aggregation", perms.phoneState)
+            PermissionLine(Icons.Rounded.PhoneAndroid, "Phone state", "Optional. Network type, 5G status and carrier aggregation. Never your number, calls or contacts", perms.phoneState)
         }
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(
                 onClick = { controller.platform.permissions.request() },
                 colors = ButtonDefaults.buttonColors(containerColor = Palette.Cyan, contentColor = Palette.Bg),
-            ) { Text("Grant access", fontWeight = FontWeight.SemiBold) }
+            ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
             if (perms.requestedOnce) {
                 OutlinedButton(onClick = { controller.platform.permissions.openSettings() }) { Text("Open settings") }
             }

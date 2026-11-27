@@ -70,7 +70,9 @@ class AndroidPlatform(context: Context) : PlatformServices {
         fun granted(p: String) = ContextCompat.checkSelfPermission(app, p) == PackageManager.PERMISSION_GRANTED
         permissions.update(
             PermissionState(
-                location = granted(Manifest.permission.ACCESS_FINE_LOCATION),
+                // Android only reveals cell IDs with precise location; approximate counts only where an edition opts out of precise.
+                location = granted(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                    (!FeatureFlags.current.allowPreciseLocation && granted(Manifest.permission.ACCESS_COARSE_LOCATION)),
                 phoneState = granted(Manifest.permission.READ_PHONE_STATE),
                 phoneStateApplicable = true,
                 requestedOnce = requestedOnce,
@@ -255,6 +257,29 @@ class AndroidPlatform(context: Context) : PlatformServices {
             if (!tmp.renameTo(target)) { target.writeText(text); tmp.delete() }
         }
     }
+
+    /** Set at startup by the open-source edition, which can record with the app closed. */
+    override var backgroundRecorder: BackgroundRecorder? = null
+
+    /** Set at startup by the Play edition. */
+    override var license: io.towerscope.license.LicenseManager? = null
+
+    /**
+     * Writes the file to the app's cache and opens the share sheet. Needs the FileProvider that only the
+     * open-source edition declares (authority "<applicationId>.export"); elsewhere this returns false.
+     */
+    override fun shareFile(fileName: String, mimeType: String, content: String): Boolean = runCatching {
+        val dir = java.io.File(app.cacheDir, "export").apply { mkdirs() }
+        dir.listFiles()?.forEach { it.delete() } // only ever keep the latest export
+        val file = java.io.File(dir, fileName).apply { writeText(content) }
+        val uri = androidx.core.content.FileProvider.getUriForFile(app, "${app.packageName}.export", file)
+        val send = Intent(Intent.ACTION_SEND)
+            .setType(mimeType)
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .putExtra(Intent.EXTRA_SUBJECT, "TowerScope Live history")
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        app.startActivity(Intent.createChooser(send, "Export history").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION))
+    }.isSuccess
 
     override fun localHour(epochMs: Long): Int =
         java.util.Calendar.getInstance().apply { timeInMillis = epochMs }.get(java.util.Calendar.HOUR_OF_DAY)

@@ -145,4 +145,20 @@ class HistoryTest {
         assertTrue(r.alerts.isEmpty())
         assertEquals(listOf("Google Pixel 8" to 40, phone to 25), r.devices)
     }
+
+    @Test
+    fun csvHasHeaderOneRowPerRecordAndQuotesCommas() {
+        val csv = HistoryCsv.encode(listOf(sig(now, -95), spd(now, 42.5, device = "Acme, Inc. Phone")))
+        val lines = csv.trim().lines()
+        assertEquals(HistoryCsv.HEADER, lines[0])
+        assertEquals(3, lines.size)
+        assertTrue(lines[1].startsWith("2027-01-15T08:00:00Z,12,signal,47.61,-122.34,"), lines[1])
+        assertTrue(lines[2].endsWith(",42.5,10.0,30.0,yes,\"Acme, Inc. Phone\""), lines[2])
+    }
+
+    @Test
+    fun utcIsoFormatsKnownDates() {
+        assertEquals("1970-01-01T00:00:00Z", HistoryCsv.utcIso(0))
+        assertEquals("2000-02-29T23:59:59Z", HistoryCsv.utcIso(951_868_799_000))
+    }
 }

@@ -124,6 +124,14 @@ fun TowerScopeApp(controller: AppController, navigator: Navigator) {
         onDispose { }
     }
     TowerScopeTheme {
+        // Play edition: once the free week is over without an unlock, show only the paywall.
+        controller.license?.let { lic ->
+            val ls by lic.state.collectAsState()
+            if (ls.locked(controller.platform.nowMs())) {
+                io.towerscope.ui.screens.PaywallScreen(lic)
+                return@TowerScopeTheme
+            }
+        }
         val route = navigator.current
         val isHome = route is Route.Home
         val snapshot by controller.snapshot.collectAsState()

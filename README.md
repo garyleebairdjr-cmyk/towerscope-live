@@ -3,6 +3,12 @@
 [![Build & release Android APK](https://github.com/garyleebairdjr-cmyk/towerscope-live/actions/workflows/android.yml/badge.svg)](https://github.com/garyleebairdjr-cmyk/towerscope-live/actions/workflows/android.yml)
 [![Latest release](https://img.shields.io/github/v/release/garyleebairdjr-cmyk/towerscope-live?label=download%20APK)](https://github.com/garyleebairdjr-cmyk/towerscope-live/releases/latest)
 
+[Wiki and user guide](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki) ·
+[Two editions](EDITIONS.md) ·
+[Privacy](PRIVACY.md) ·
+[Help test it on Google Play](TESTERS.md) ·
+[Building](#building)
+
 A cellular-tower analyzer for Android, plus a reduced iOS version. It finds the tower you're connected to,
 shows live signal measurements, and works out distance, bearing, RF path geometry and expected up/down
 speeds from what the phone reports. It also includes a speed test, so you can compare the predicted speed
@@ -10,6 +16,17 @@ with the measured one.
 
 Built with **Kotlin Multiplatform + Compose Multiplatform**. The UI and all the math are shared. The
 platform layers are native: Android `TelephonyManager`, and iOS `CoreTelephony`/`CoreLocation`.
+
+## Two editions
+
+TowerScope Live comes in two editions from this one codebase. The **Play edition** (coming to Google Play)
+is the simple, private one: location only while the app is open, no background tracking and no long-term
+history, free for 7 days and then a one-time $1.99. The **open-source edition** is free and adds optional
+extras for power users: on-phone history, CSV export, and recording with the app closed. The GitHub
+releases below are the open-source edition. [EDITIONS.md](EDITIONS.md) compares them, and the
+[wiki](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki/Editions) has the same comparison.
+
+If I've invited you to the closed test on Google Play, start with [TESTERS.md](TESTERS.md).
 
 ## Install on Android (no app store)
 
@@ -20,14 +37,15 @@ The [wiki](https://github.com/garyleebairdjr-cmyk/towerscope-live/wiki) has a fu
 
 1. **On your phone**, open the [latest release](https://github.com/garyleebairdjr-cmyk/towerscope-live/releases/latest)
    and tap the file named `TowerScope-Live-0.9.N.apk` (or `TowerScope-Live.apk`) under **Assets** to download it.
-2. Open the downloaded file (tap the download notification, or find it in **Files → Downloads**).
+2. Open the downloaded file (tap the download notification, or find it in **Files**, then **Downloads**).
 3. Android will ask for permission to install apps from that source (your browser or Files app). Tap
    **Settings**, turn on **Allow from this source**, then go back and tap **Install**.
-   - On Samsung phones this is under **Settings → Apps → ⋮ → Special access → Install unknown apps**.
-4. If **Google Play Protect** says it doesn't recognise the app, tap **More details → Install anyway**.
+   - On Samsung phones this is under **Settings**, **Apps**, the **⋮** menu, **Special access**, **Install unknown apps**.
+4. If **Google Play Protect** says it doesn't recognise the app, tap **More details**, then **Install anyway**.
    This appears for any app that isn't from the Play Store.
-5. Open **TowerScope Live** and allow **Location** (Android requires it to read cell information) and
-   **Phone** (for 5G and carrier-aggregation details).
+5. Open **TowerScope Live (Open Source)**, read the short explanation, tap **Continue**, and allow
+   **Location** (Android requires it to read cell information) and **Phone** (optional, for 5G and
+   carrier-aggregation details).
 
 **Requirements:** Android 10 or newer, and a phone with a SIM card. Tablets without cellular service
 and emulators can run the app but have no real tower data.
@@ -39,7 +57,7 @@ because every release is signed with the same key.
 `BF:E8:9F:40:55:85:7F:FD:9B:8B:D3:76:E6:F6:60:6C:DC:CA:7E:4F:3F:D1:EB:D4:A7:96:B7:7D:F5:D0:DA:F7`.
 You can check it with `apksigner verify --print-certs TowerScope-Live-*.apk`.
 
-**Uninstalling:** long-press the app icon → **Uninstall**, like any other app.
+**Uninstalling:** long-press the app icon, then tap **Uninstall**, like any other app.
 
 ### iPhone
 
@@ -77,10 +95,10 @@ Captured on a Samsung Galaxy A16 (Android 16) connected to T-Mobile LTE band 3, 
 |---|---|
 | **Overview** | Animated radar showing the serving tower, neighbor cells and database towers. The radar rotates with the compass and marks both true north and magnetic north. A bold beam points to the serving tower, with its bearing and how far to turn. Also: signal gauge, link score, distance, bearing, and estimated download/upload. |
 | **Signal** | Link-quality score (0–100), live history chart with grade bands, and every metric (RSRP, RSRQ, SINR, RSSI, CQI, TA, RSCP, Ec/No). Includes a serving-vs-neighbor comparison. |
-| **Metric drill-down** | Threshold scale, history with min/avg/max/std dev, and values derived from the metric: path loss, SNR margin, modulation, Shannon limit, MIMO rank, TA→distance and CQI→MCS. Each metric also explains what it is, what affects it and how to improve it. |
+| **Metric drill-down** | Threshold scale, history with min/avg/max/std dev, and values derived from the metric: path loss, SNR margin, modulation, Shannon limit, MIMO rank, distance from TA, and MCS from CQI. Each metric also explains what it is, what affects it and how to improve it. |
 | **Cell detail** | Distance compared across 4 methods (with error bars), a compass arrow pointing to the tower, and the throughput model with every input. Also: band and frequencies (DL/UL), wavelength, Fresnel zone, radio horizon, elevation angle, Doppler, decoded IDs (eNB/gNB ID, sector, PCI group, RNC…) and tower coordinates. |
 | **Towers** | Cells your phone hears (serving, secondary, neighbors) and towers recorded in OpenCelliD within about 1 km. Each is tagged *serving*, *heard* or *nearest*. |
-| **History & patterns** | On-phone history of signal and speed tests (up to 90 days) that finds your best places, time-of-day patterns, your best towers, and alerts when things get worse. You choose exact, approximate or no location, and whether it goes into your Google backup. |
+| **History & patterns** | Open-source edition, off until you turn it on. On-phone history of signal and speed tests (up to 90 days) that finds your best places, time-of-day patterns, your best towers, and alerts when things get worse. You choose exact, approximate or no location, whether it goes into your Google backup, and whether it keeps recording with the app closed. You can export it as a CSV file. |
 | **Diagnosis** | Checks the readings for common problems: weak signal, strong-but-noisy signal, a neighbor cell that stays much stronger, weak 5G, battery saver, an active VPN, outdated software, and congestion (good signal, poor measured speed). Each finding explains what to do and opens the right settings page. |
 | **Find best spot** | Walk around and compare a 4-second signal average at each place. Save spots and they're ranked automatically, and the phone vibrates at a new best. |
 | **Better signal guide** | Plain-language explanations of what actually improves reception, by roughly how much, and which popular tricks don't work. |
@@ -89,14 +107,14 @@ Captured on a Samsung Galaxy A16 (Android 16) connected to T-Mobile LTE band 3, 
 ### How the derived values are calculated
 
 - **Distance**
-  1. GPS ↔ tower position from OpenCelliD (haversine).
+  1. GPS position to the tower position from OpenCelliD (haversine).
   2. Timing advance (LTE 16·Ts ≈ 78.07 m/step, GSM ≈ 553.5 m/step, NR µs from API 34+).
   3. Okumura-Hata / COST-231 inverted from path loss = assumed EIRP − RSRP.
   4. Free-space upper bound.
 - **Bearing**: great-circle initial bearing, relative to true north. The compass applies magnetic
   declination (Android `GeomagneticField`, iOS `CLHeading.trueHeading`) once GPS has a fix, and the radar
   shows the declination and magnetic north alongside true north.
-- **Bands**: EARFCN / NR-ARFCN / UARFCN / ARFCN → band and DL/UL frequency, per 3GPP 36.101, 38.104,
+- **Bands**: EARFCN / NR-ARFCN / UARFCN / ARFCN to band and DL/UL frequency, per 3GPP 36.101, 38.104,
   25.101 and 45.005. Overlapping NR bands are resolved using the modem-reported band, then by region.
 - **Throughput**: attenuated Shannon model (3GPP TR 36.942), with control overhead, TDD split, MIMO rank
   vs SINR and carrier-aggregation bandwidths (`ServiceState.getCellBandwidths`). Uplink uses a
@@ -115,7 +133,7 @@ shows the best distance estimate in both miles and kilometres.
 Phones report *which* cell they're using, but not *where* the tower is. To get tower positions, TowerScope
 looks them up in [OpenCelliD](https://opencellid.org). A key is free:
 
-1. In TowerScope, open **Settings → Tower database** and tap **Get a free key**.
+1. In TowerScope, open **Settings**, then **Tower database**, and tap **Get a free key**.
 2. Enter your email address and tap **LOGIN WITH EMAIL** (or **Sign-up for free** if you're new).
 3. Open the email titled *OpenCelliD Project magic link* and tap **click here**. That signs you in.
 4. On the dashboard, open **Access Tokens** and copy your token (it starts with `pk.`).
@@ -132,24 +150,36 @@ dashed ring (the distance is known, the direction isn't).
 
 Requirements: JDK 17+ and an Android SDK with platform **37** installed.
 
+Each edition is a Gradle product flavor:
+
+| Flavor | Package | |
+|---|---|---|
+| `foss` | `io.towerscope.android` | Open-source edition, the one on GitHub releases |
+| `play` | `io.towerscope.live` | Google Play edition, with the trial and Play Billing |
+
 ```bash
-./gradlew :androidApp:assembleDebug          # androidApp/build/outputs/apk/debug/
-./gradlew :androidApp:installDebug           # to a connected device
-./gradlew :androidApp:assembleRelease        # R8-minified (~3 MB); see signing below
-./gradlew :shared:testAndroidHostTest        # unit tests for the RF/geo math
+./gradlew :androidApp:assembleFossDebug      # androidApp/build/outputs/apk/foss/debug/
+./gradlew :androidApp:installFossDebug       # to a connected device
+./gradlew :androidApp:assembleFossRelease    # R8-minified (~3 MB); see signing below
+./gradlew :androidApp:assemblePlayRelease    # Play edition APK, for testing
+./gradlew :androidApp:bundlePlayRelease      # Play edition .aab for Play Console
+./gradlew :shared:testAndroidHostTest        # unit tests for the RF/geo math, history and trial
 ```
 
 Use a **real phone with a SIM**. Emulators report one fake cell, and there's no timing advance or
 neighbor data there.
 
 Release builds are signed with the key given in the `TOWERSCOPE_KEYSTORE`, `TOWERSCOPE_KEYSTORE_PASSWORD`,
-`TOWERSCOPE_KEY_ALIAS` and `TOWERSCOPE_KEY_PASSWORD` environment variables. Without them, the debug key
-is used.
+`TOWERSCOPE_KEY_ALIAS` and `TOWERSCOPE_KEY_PASSWORD` environment variables, or in a `keystore.properties`
+file in the repo root (copy [keystore.properties.example](keystore.properties.example); it's gitignored).
+Environment variables win when both are set. Without either, the debug key is used, which is fine for
+trying things out but can't update a signed install. `scripts/install-release-local.sh` builds the signed
+open-source edition and installs it over an existing copy, keeping its data.
 
 ### Continuous builds
 
 [.github/workflows/android.yml](.github/workflows/android.yml) runs on every push and pull request. It runs
-the unit tests and builds the minified release APK. On pushes to `main` it also publishes a GitHub Release
+the unit tests and builds the minified open-source release APK (`assembleFossRelease`). On pushes to `main` it also publishes a GitHub Release
 (`v0.9.<run number>`, titled "pre-beta" for now) with the APK attached. The signing key comes from the repository secrets
 `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`.
 
@@ -184,16 +214,29 @@ shared/src/commonMain/kotlin/io/towerscope/
   AppController.kt   State holder: scanning, lookups, history, speed test
 shared/src/androidMain/   TelephonyManager, LocationManager, rotation-vector compass, OkHttp
 shared/src/iosMain/       CoreTelephony, CoreLocation, Darwin HTTP, ComposeUIViewController
-androidApp/               Activity, permissions, back handling, launcher icon
+androidApp/src/main/      Activity, permissions, back handling, launcher icon
+androidApp/src/foss/      Background recording service, history export file provider
+androidApp/src/play/      Play Billing unlock and trial, manifest removals
 iosApp/                   SwiftUI host + XcodeGen spec
 ```
 
 ## Permissions (Android)
 
-| Permission | Why |
-|---|---|
-| `ACCESS_FINE_LOCATION` | Required by Android to return cell identities; also used for GPS distance and bearing |
-| `READ_PHONE_STATE` | 5G NSA detection, data network type, carrier-aggregation bandwidths |
-| `INTERNET`, `ACCESS_NETWORK_STATE` | Tower lookups, speed test, transport detection |
+The app explains its permissions on its own screen first. Android only asks after you tap **Continue**.
 
-Radio and GPS stop when the app goes to the background.
+| Permission | Editions | Why |
+|---|---|---|
+| `ACCESS_FINE_LOCATION` | Both | Required by Android to return cell identities; also used for GPS distance and bearing |
+| `ACCESS_COARSE_LOCATION` | Both | Requested alongside precise location, as Android requires |
+| `READ_PHONE_STATE` | Both, optional | 5G NSA detection, data network type, carrier-aggregation bandwidths. Never the phone number, calls or contacts |
+| `INTERNET`, `ACCESS_NETWORK_STATE` | Both | Tower lookups, speed test, transport detection |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`, `POST_NOTIFICATIONS` | Open source only | Optional recording with the app closed, always with a notification |
+| `com.android.vending.BILLING` | Play only | The one-time unlock |
+
+Neither edition requests `ACCESS_BACKGROUND_LOCATION`. In the Play edition, radio and GPS always stop when
+the app goes to the background. In the open-source edition they do too, unless you turn on background
+recording, which runs as a visible foreground service you started yourself.
+
+## License
+
+Not chosen yet. See [LICENSE](LICENSE).

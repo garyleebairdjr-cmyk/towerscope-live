@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Open-source edition extras: opt-in recording with the app closed, and history export. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      Recording with the app closed runs as a location foreground service the person starts from the app,
+      with a notification showing the whole time. Android gives such a service the same while-in-use location
+      access the app has, so ACCESS_BACKGROUND_LOCATION ("Allow all the time") is not needed or requested.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application>
+        <service
+            android:name=".RecordingService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.export"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/export_paths" />
+        </provider>
+    </application>
+</manifest>

@@ -29,9 +29,11 @@ data class AppSettings(
     val handsetTxPowerDbm: Double = 23.0,
     val units: UnitSystem = UnitSystem.METRIC,
     val refreshSeconds: Int = 3,
-    /** Keep signal readings and speed tests (with GPS position) on the phone to learn patterns over time. */
-    val recordHistory: Boolean = true,
-    val historyLocation: HistoryLocation = HistoryLocation.EXACT,
+    /** Keep signal readings and speed tests on the phone to learn patterns over time. Off until the person turns it on. */
+    val recordHistory: Boolean = false,
+    val historyLocation: HistoryLocation = HistoryLocation.APPROXIMATE,
+    /** Keep recording while the app is closed (open-source edition, opt-in, shows a notification). */
+    val backgroundRecording: Boolean = false,
 ) {
     val hasApiKey: Boolean get() = openCellIdKey.isNotBlank()
 }
@@ -49,6 +51,7 @@ class SettingsRepository(private val store: KeyValueStore, private val defaultUn
             refreshSeconds = store.getString(K_REFRESH)?.toIntOrNull() ?: d.refreshSeconds,
             recordHistory = store.getString(K_HISTORY)?.toBooleanStrictOrNull() ?: d.recordHistory,
             historyLocation = store.getString(K_HISTORY_LOC)?.let { v -> HistoryLocation.entries.firstOrNull { it.name == v } } ?: d.historyLocation,
+            backgroundRecording = store.getString(K_BACKGROUND)?.toBooleanStrictOrNull() ?: d.backgroundRecording,
         )
     }
 
@@ -62,6 +65,7 @@ class SettingsRepository(private val store: KeyValueStore, private val defaultUn
         store.putString(K_REFRESH, s.refreshSeconds.toString())
         store.putString(K_HISTORY, s.recordHistory.toString())
         store.putString(K_HISTORY_LOC, s.historyLocation.name)
+        store.putString(K_BACKGROUND, s.backgroundRecording.toString())
     }
 
     private companion object {
@@ -74,5 +78,6 @@ class SettingsRepository(private val store: KeyValueStore, private val defaultUn
         const val K_REFRESH = "refresh"
         const val K_HISTORY = "record_history"
         const val K_HISTORY_LOC = "history_location"
+        const val K_BACKGROUND = "background_recording"
     }
 }
