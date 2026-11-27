@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 and later. backup_rules.xml covers Android 10 and 11; keep the two in step. -->
 <data-extraction-rules>
-    <!-- Keep the OpenCelliD key on this device only. -->
+    <!-- The OpenCelliD key (in towerscope.xml) stays on this device only. -->
+    <!-- History stays on this device unless the person opts in; then it is history-backup.tsv, which is backed up. -->
     <cloud-backup>
         <exclude domain="sharedpref" path="towerscope.xml" />
+        <exclude domain="file" path="history.tsv" />
+        <exclude domain="file" path="history.tsv.tmp" />
+        <exclude domain="file" path="history-backup.tsv.tmp" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="towerscope.xml" />
+        <exclude domain="file" path="history.tsv" />
+        <exclude domain="file" path="history.tsv.tmp" />
+        <exclude domain="file" path="history-backup.tsv.tmp" />
     </device-transfer>
 </data-extraction-rules>

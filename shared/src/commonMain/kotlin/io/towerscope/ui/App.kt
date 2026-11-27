@@ -81,6 +81,7 @@ sealed interface Route {
     data object Settings : Route
     data object Device : Route
     data object SpotFinder : Route
+    data object History : Route
     data class Guide(val topic: io.towerscope.calc.GuideTopic?) : Route
 }
 
@@ -203,9 +204,10 @@ fun TowerScopeApp(controller: AppController, navigator: Navigator) {
                         is Route.Metric -> MetricDetailScreen(controller, r.kind)
                         is Route.Cell -> CellDetailScreen(controller, navigator, r.key)
                         is Route.DbTower -> DatabaseTowerScreen(controller, r.tower)
-                        Route.Settings -> SettingsScreen(controller)
+                        Route.Settings -> SettingsScreen(controller, navigator)
                         Route.Device -> DeviceScreen(controller)
                         Route.SpotFinder -> io.towerscope.ui.screens.SpotFinderScreen(controller, navigator)
+                        Route.History -> io.towerscope.ui.screens.HistoryScreen(controller)
                         is Route.Guide -> io.towerscope.ui.screens.GuideScreen(controller, navigator, r.topic)
                     }
                 }
@@ -222,6 +224,7 @@ private fun titleFor(r: Route, tab: Tab): String = when (r) {
     Route.Settings -> "Settings"
     Route.Device -> "Device & network"
     Route.SpotFinder -> "Find best spot"
+    Route.History -> "History & patterns"
     is Route.Guide -> "Better signal guide"
 }
 

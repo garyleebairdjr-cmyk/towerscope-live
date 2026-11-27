@@ -10,7 +10,16 @@ import io.towerscope.calc.Geo
 import io.towerscope.calc.NeighborWatch
 import io.towerscope.calc.SettingsTarget
 import io.towerscope.calc.SinrSanity
+import io.towerscope.calc.InsightReport
+import io.towerscope.calc.Insights
+import io.towerscope.data.HistoryLocation
+import io.towerscope.data.HistoryRecord
+import io.towerscope.data.withLocation
+import io.towerscope.data.HistoryStore
 import io.towerscope.data.SavedSpot
+import io.towerscope.data.SignalRecord
+import io.towerscope.data.SignalSampler
+import io.towerscope.data.SpeedRecord
 import io.towerscope.data.SpotStore
 import io.towerscope.model.RadioType
 import io.towerscope.data.AppSettings
@@ -101,6 +110,20 @@ class AppController(val platform: PlatformServices) {
     private val _sinrUnreported = MutableStateFlow(false)
     val sinrUnreported: StateFlow<Boolean> = _sinrUnreported.asStateFlow()
 
+    private val historyStore = HistoryStore(platform.historyFile)
+    private val signalSampler = SignalSampler()
+    private val _longHistory = MutableStateFlow<List<HistoryRecord>>(emptyList())
+    /** On-phone history of signal readings and speed tests (up to 90 days), oldest first. */
+    val longHistory: StateFlow<List<HistoryRecord>> = _longHistory.asStateFlow()
+    private var historyLoaded = false
+    private val _historyBackedUp = MutableStateFlow(platform.historyFile.backedUp)
+    /** True when history is included in the phone's cloud backup. */
+    val historyBackedUp: StateFlow<Boolean> = _historyBackedUp.asStateFlow()
+    val historyBackupSupported: Boolean get() = platform.historyFile.backupSupported
+    /** Identifies the phone on each reading, e.g. "samsung SM-A165M". */
+    val deviceLabel: String = "${platform.device.manufacturer} ${platform.device.model}".trim()
+    private val pendingHistory = mutableListOf<HistoryRecord>()
+
     private val neighborWatch = NeighborWatch()
     private var neighborCandidate: io.towerscope.calc.NeighborCandidate? = null
     private val rawSinr = ArrayDeque<Pair<Double?, Int?>>()
@@ -114,6 +137,12 @@ class AppController(val platform: PlatformServices) {
     private var lastNearbyFix: GeoFix? = null
 
     init {
+        scope.launch {
+            val loaded = kotlinx.coroutines.withContext(Dispatchers.Default) { historyStore.load(platform.nowMs()) }
+            _longHistory.value = loaded + pendingHistory
+            pendingHistory.clear()
+            historyLoaded = true
+        }
         scope.launch {
             permissions.map { it.coreGranted }.distinctUntilChanged().collect { granted ->
                 if (granted && started) startSensors()
@@ -212,6 +241,17 @@ class AppController(val platform: PlatformServices) {
                 timingAdvance = cell.signal.timingAdvance,
             )
             _history.update { (it + sample).takeLast(MAX_HISTORY) }
+            val dbm = cell.signal.rsrp ?: cell.signal.rscp ?: cell.signal.dbm
+            if (_settings.value.recordHistory && dbm != null) {
+                val f = freshFix()
+                val (la, lo) = _settings.value.historyLocation.apply(f?.lat, f?.lon)
+                val rec = SignalRecord(
+                    s.timestampMs, platform.localHour(s.timestampMs), la, lo,
+                    cell.identity.key.takeIf { cell.identity.isLookupable }, cell.identity.radio,
+                    dbm, cell.signal.sinr, cell.signal.rsrq, deviceLabel,
+                )
+                if (signalSampler.shouldRecord(rec)) addHistory(rec)
+            }
         }
         // Resolve tower positions for serving cells and complete neighbor identities.
         s.cells.filter { it.identity.isLookupable }
@@ -317,6 +357,19 @@ class AppController(val platform: PlatformServices) {
                             )
                             (listOf(r) + it).take(20)
                         }
+                        if (_settings.value.recordHistory) {
+                            val now = platform.nowMs()
+                            val f = freshFix()
+                            val (la, lo) = _settings.value.historyLocation.apply(f?.lat, f?.lon)
+                            val cellular = net?.transport == io.towerscope.model.Transport.CELLULAR
+                            addHistory(
+                                SpeedRecord(
+                                    now, platform.localHour(now), la, lo,
+                                    serving?.identity?.takeIf { cellular && it.isLookupable }?.key,
+                                    st.downMbps, st.upMbps, st.pingMs, cellular, deviceLabel,
+                                ),
+                            )
+                        }
                         recomputeAdvice()
                     }
                 }
@@ -371,6 +424,48 @@ class AppController(val platform: PlatformServices) {
     fun clearSpots() {
         _spots.value = emptyList()
         spotStore.save(emptyList())
+    }
+
+    /** GPS fix if it's recent; a stale position would file readings under the wrong place. */
+    private fun freshFix(): GeoFix? = _fix.value?.takeIf { platform.nowMs() - it.timestampMs < 120_000 }
+
+    private fun addHistory(r: HistoryRecord) {
+        if (!historyLoaded) pendingHistory += r
+        else _longHistory.update { HistoryStore.prune(it + r, r.timestampMs) }
+        scope.launch(Dispatchers.Default) { historyStore.append(r) }
+    }
+
+    /** Patterns in the on-phone history, relative to the current position. */
+    fun insights(): InsightReport =
+        Insights.report(_longHistory.value, freshFix()?.lat, freshFix()?.lon, platform.nowMs(), currentDevice = deviceLabel)
+
+    /**
+     * Changes how much location is kept. Going to a less precise level also rounds or removes the
+     * position on readings already saved, so the choice applies to the whole history.
+     */
+    fun setHistoryLocation(level: HistoryLocation) {
+        val old = _settings.value.historyLocation
+        updateSettings { it.copy(historyLocation = level) }
+        if (level.ordinal > old.ordinal) {
+            val reduced = _longHistory.value.map { it.withLocation(level) }
+            _longHistory.value = reduced
+            scope.launch(Dispatchers.Default) { historyStore.rewrite(reduced) }
+        }
+    }
+
+    /** Puts the history into, or takes it out of, the phone's cloud backup. */
+    fun setHistoryBackedUp(on: Boolean) {
+        scope.launch(Dispatchers.Default) {
+            platform.historyFile.setBackedUp(on)
+            _historyBackedUp.value = platform.historyFile.backedUp
+        }
+    }
+
+    /** Deletes all stored signal and speed history from the phone. */
+    fun clearHistory() {
+        pendingHistory.clear()
+        _longHistory.value = emptyList()
+        scope.launch(Dispatchers.Default) { historyStore.clear() }
     }
 
     fun analyze(cell: CellObservation): CellAnalysis =

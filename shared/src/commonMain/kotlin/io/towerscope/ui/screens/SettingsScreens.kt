@@ -46,7 +46,7 @@ import io.towerscope.ui.components.SectionHeader
 import io.towerscope.ui.theme.Palette
 
 @Composable
-fun SettingsScreen(controller: AppController) {
+fun SettingsScreen(controller: AppController, nav: io.towerscope.ui.Navigator) {
     val settings by controller.settings.collectAsState()
     var keyDraft by remember { mutableStateOf(settings.openCellIdKey) }
     var showKey by remember { mutableStateOf(false) }
@@ -153,6 +153,14 @@ fun SettingsScreen(controller: AppController) {
                 }
             }
             Text("Android may throttle cell updates; faster intervals use more battery.", fontSize = 11.sp, color = Palette.TextFaint)
+        }
+
+        GlassCard(Modifier.fillMaxWidth()) {
+            SectionHeader("History", subtitle = "Signal and speed over time, kept on this phone")
+            io.towerscope.ui.components.DrillRow(
+                title = "History & patterns",
+                subtitle = if (settings.recordHistory) "Recording · location: ${settings.historyLocation.label.lowercase()}" else "Recording is off",
+            ) { nav.push(io.towerscope.ui.Route.History) }
         }
 
         GlassCard(Modifier.fillMaxWidth()) {

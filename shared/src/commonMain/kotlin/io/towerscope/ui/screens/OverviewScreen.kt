@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material.icons.rounded.Upload
@@ -288,6 +289,19 @@ fun OverviewScreen(controller: AppController, nav: Navigator) {
                 DrillRow("Device & network", null) { nav.push(Route.Device) }
             }
         }
+        val longHistory by controller.longHistory.collectAsState()
+        GlassCard(Modifier.fillMaxWidth()) {
+            io.towerscope.ui.components.DrillRow(
+                title = "History & patterns",
+                subtitle = when {
+                    !settings.recordHistory -> "Recording is off"
+                    longHistory.isEmpty() -> "Learns where and when your signal is best"
+                    else -> "${longHistory.size} readings · best places, times and towers"
+                },
+                leading = { androidx.compose.material3.Icon(Icons.Rounded.History, null, tint = Palette.Violet) },
+            ) { nav.push(Route.History) }
+        }
+
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             androidx.compose.material3.Icon(Icons.Rounded.PhoneAndroid, null, tint = Palette.TextFaint, modifier = Modifier.size(14.dp))
             Spacer(Modifier.width(6.dp))

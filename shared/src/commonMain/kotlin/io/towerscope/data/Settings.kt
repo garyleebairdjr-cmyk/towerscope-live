@@ -29,6 +29,9 @@ data class AppSettings(
     val handsetTxPowerDbm: Double = 23.0,
     val units: UnitSystem = UnitSystem.METRIC,
     val refreshSeconds: Int = 3,
+    /** Keep signal readings and speed tests (with GPS position) on the phone to learn patterns over time. */
+    val recordHistory: Boolean = true,
+    val historyLocation: HistoryLocation = HistoryLocation.EXACT,
 ) {
     val hasApiKey: Boolean get() = openCellIdKey.isNotBlank()
 }
@@ -44,6 +47,8 @@ class SettingsRepository(private val store: KeyValueStore, private val defaultUn
             handsetTxPowerDbm = store.getString(K_UETX)?.toDoubleOrNull() ?: d.handsetTxPowerDbm,
             units = store.getString(K_UNITS)?.let { v -> UnitSystem.entries.firstOrNull { it.name == v } } ?: d.units,
             refreshSeconds = store.getString(K_REFRESH)?.toIntOrNull() ?: d.refreshSeconds,
+            recordHistory = store.getString(K_HISTORY)?.toBooleanStrictOrNull() ?: d.recordHistory,
+            historyLocation = store.getString(K_HISTORY_LOC)?.let { v -> HistoryLocation.entries.firstOrNull { it.name == v } } ?: d.historyLocation,
         )
     }
 
@@ -55,6 +60,8 @@ class SettingsRepository(private val store: KeyValueStore, private val defaultUn
         store.putString(K_UETX, s.handsetTxPowerDbm.toString())
         store.putString(K_UNITS, s.units.name)
         store.putString(K_REFRESH, s.refreshSeconds.toString())
+        store.putString(K_HISTORY, s.recordHistory.toString())
+        store.putString(K_HISTORY_LOC, s.historyLocation.name)
     }
 
     private companion object {
@@ -65,5 +72,7 @@ class SettingsRepository(private val store: KeyValueStore, private val defaultUn
         const val K_UETX = "ue_tx"
         const val K_UNITS = "units"
         const val K_REFRESH = "refresh"
+        const val K_HISTORY = "record_history"
+        const val K_HISTORY_LOC = "history_location"
     }
 }

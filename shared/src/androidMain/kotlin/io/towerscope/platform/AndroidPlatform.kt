@@ -223,6 +223,42 @@ class AndroidPlatform(context: Context) : PlatformServices {
         }
     }
 
+    /**
+     * History lives in one of two private files. history.tsv is excluded from backups; history-backup.tsv is
+     * included in Android's automatic Google backup, so it comes back on reinstall or on a new phone. The
+     * person's choice is where the file is (not a setting), so it survives a restore with the data.
+     */
+    override val historyFile: io.towerscope.data.HistoryFile = object : io.towerscope.data.HistoryFile {
+        private val local = java.io.File(app.filesDir, "history.tsv")
+        private val backup = java.io.File(app.filesDir, "history-backup.tsv")
+        private val f get() = if (backup.exists()) backup else local
+
+        override fun readAll(): String? = runCatching { f.takeIf { it.exists() }?.readText() }.getOrNull()
+        override fun append(text: String) { runCatching { f.appendText(text) } }
+        override fun replace(text: String) { runCatching { atomicWrite(f, text) } }
+        override fun clear() { runCatching { local.delete(); backup.delete() } }
+
+        override val backupSupported: Boolean get() = true
+        override val backedUp: Boolean get() = backup.exists()
+        override fun setBackedUp(on: Boolean) {
+            runCatching {
+                val from = if (on) local else backup
+                val to = if (on) backup else local
+                if (from.exists()) { if (!from.renameTo(to)) { to.writeText(from.readText()); from.delete() } }
+                else if (on) to.createNewFile()
+            }
+        }
+
+        private fun atomicWrite(target: java.io.File, text: String) {
+            val tmp = java.io.File(target.parentFile, target.name + ".tmp")
+            tmp.writeText(text)
+            if (!tmp.renameTo(target)) { target.writeText(text); tmp.delete() }
+        }
+    }
+
+    override fun localHour(epochMs: Long): Int =
+        java.util.Calendar.getInstance().apply { timeInMillis = epochMs }.get(java.util.Calendar.HOUR_OF_DAY)
+
     override fun openUrl(url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         runCatching { app.startActivity(intent) }

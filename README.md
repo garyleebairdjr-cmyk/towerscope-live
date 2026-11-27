@@ -55,7 +55,7 @@ Captured on a Samsung Galaxy A16 (Android 16) connected to T-Mobile LTE band 3, 
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/overview.png" width="240" alt="Overview: distance to serving tower and radar"><br><sub><b>Overview</b>: distance, radar, true and magnetic north</sub></td>
+    <td align="center"><img src="docs/screenshots/overview.png" width="240" alt="Overview: radar with a direction beam pointing to the serving tower"><br><sub><b>Overview</b>: direction beam to the tower, true and magnetic north</sub></td>
     <td align="center"><img src="docs/screenshots/overview-signal.png" width="240" alt="Overview: RSRP gauge, link score and estimated speeds"><br><sub>Signal gauge, link score, est. speeds</sub></td>
     <td align="center"><img src="docs/screenshots/signal.png" width="240" alt="Signal tab: link quality score and live history chart"><br><sub><b>Signal</b>: link score and live history</sub></td>
   </tr>
@@ -80,6 +80,7 @@ Captured on a Samsung Galaxy A16 (Android 16) connected to T-Mobile LTE band 3, 
 | **Metric drill-down** | Threshold scale, history with min/avg/max/std dev, and values derived from the metric: path loss, SNR margin, modulation, Shannon limit, MIMO rank, TA→distance and CQI→MCS. Each metric also explains what it is, what affects it and how to improve it. |
 | **Cell detail** | Distance compared across 4 methods (with error bars), a compass arrow pointing to the tower, and the throughput model with every input. Also: band and frequencies (DL/UL), wavelength, Fresnel zone, radio horizon, elevation angle, Doppler, decoded IDs (eNB/gNB ID, sector, PCI group, RNC…) and tower coordinates. |
 | **Towers** | Cells your phone hears (serving, secondary, neighbors) and towers recorded in OpenCelliD within about 1 km. Each is tagged *serving*, *heard* or *nearest*. |
+| **History & patterns** | On-phone history of signal and speed tests (up to 90 days) that finds your best places, time-of-day patterns, your best towers, and alerts when things get worse. You choose exact, approximate or no location, and whether it goes into your Google backup. |
 | **Diagnosis** | Checks the readings for common problems: weak signal, strong-but-noisy signal, a neighbor cell that stays much stronger, weak 5G, battery saver, an active VPN, outdated software, and congestion (good signal, poor measured speed). Each finding explains what to do and opens the right settings page. |
 | **Find best spot** | Walk around and compare a 4-second signal average at each place. Save spots and they're ranked automatically, and the phone vibrates at a new best. |
 | **Better signal guide** | Plain-language explanations of what actually improves reception, by roughly how much, and which popular tricks don't work. |

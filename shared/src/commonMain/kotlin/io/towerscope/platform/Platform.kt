@@ -48,6 +48,12 @@ interface PlatformServices {
 
     /** ISO 3166 country of the device locale (e.g. "US"), used to pick default units. */
     val regionCode: String? get() = null
+
+    /** Where long-term history is kept. Platforms with a file system should override this. */
+    val historyFile: io.towerscope.data.HistoryFile get() = io.towerscope.data.KeyValueHistoryFile(store)
+
+    /** Hour of day (0–23) in the phone's time zone. The default is UTC. */
+    fun localHour(epochMs: Long): Int = ((epochMs / 3_600_000L) % 24).toInt()
 }
 
 data class PermissionState(
