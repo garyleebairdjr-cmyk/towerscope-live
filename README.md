@@ -15,9 +15,9 @@ shows live signal measurements, and works out distance, bearing, RF path geometr
 speeds from what the phone reports. It also includes a speed test, so you can compare the predicted speed
 with the measured one.
 
-<a href="docs/video/TowerScope-Live.mp4"><img src="docs/video/poster.png" width="640" alt="TowerScope Live: a 43-second video tour. Click to play."></a>
+<a href="https://garyleebairdjr-cmyk.github.io/towerscope-live/video/"><img src="docs/video/poster.png" width="640" alt="TowerScope Live: a 43-second video tour. Click to play."></a>
 
-*A 43-second tour of the app ([MP4](docs/video/TowerScope-Live.mp4), with English subtitles; [transcript](docs/video/TowerScope-Live.srt)).*
+*A 43-second tour of the app: [watch it](https://garyleebairdjr-cmyk.github.io/towerscope-live/video/) (English subtitles available), or [download the MP4](docs/video/TowerScope-Live.mp4) and [transcript](docs/video/TowerScope-Live.srt).*
 
 Built with **Kotlin Multiplatform + Compose Multiplatform**. The UI and all the math are shared. The
 platform layers are native: Android `TelephonyManager`, and iOS `CoreTelephony`/`CoreLocation`.
