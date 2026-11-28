@@ -19,6 +19,9 @@ interface PlatformServices {
 
     fun locationFixes(): Flow<GeoFix>
 
+    /** Location fixes no more often than [intervalMs]; used to save battery while recording with the app closed. */
+    fun locationFixes(intervalMs: Long): Flow<GeoFix> = locationFixes()
+
     /**
      * Device heading in degrees clockwise from north. May never emit if no compass.
      * It is referenced to true north once [declinationDeg] is known, and to magnetic north before that.
@@ -51,6 +54,15 @@ interface PlatformServices {
 
     /** Where long-term history is kept. Platforms with a file system should override this. */
     val historyFile: io.towerscope.data.HistoryFile get() = io.towerscope.data.KeyValueHistoryFile(store)
+
+    /** Keeps recording while the app is closed, or null where that isn't offered. */
+    val backgroundRecorder: BackgroundRecorder? get() = null
+
+    /** One-time unlock (Play edition), or null where the app is free. */
+    val license: io.towerscope.license.LicenseManager? get() = null
+
+    /** Offers [content] as a file to share or save. Returns false when this platform can't. */
+    fun shareFile(fileName: String, mimeType: String, content: String): Boolean = false
 
     /** Hour of day (0–23) in the phone's time zone. The default is UTC. */
     fun localHour(epochMs: Long): Int = ((epochMs / 3_600_000L) % 24).toInt()

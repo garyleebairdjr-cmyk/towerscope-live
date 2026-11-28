@@ -1,0 +1,122 @@
+name: Build iPhone app
+
+# Runs on GitHub's Macs. The Linux machines that build Android can't compile iOS code.
+#
+# - simulator: every push and pull request. Generates the Xcode project, builds the shared Kotlin framework
+#   and the app for the iOS Simulator without signing, and keeps the .app as an artifact. No secrets needed.
+# - testflight: only when started by hand (Actions tab, "Run workflow"), and only if the App Store Connect and
+#   fastlane match secrets exist. Otherwise it skips with a notice.
+#
+# Apple requires App Store uploads to be built with Xcode 26 or later and the iOS 26 SDK (since April 28, 2026).
+# The runner and Xcode are pinned so an image update can't change them silently.
+
+on:
+  push:
+    paths: ["iosApp/**", "shared/**", "gradle/**", "*.gradle.kts", ".github/workflows/ios.yml"]
+  pull_request:
+    paths: ["iosApp/**", "shared/**", "gradle/**", "*.gradle.kts", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+    inputs:
+      testflight:
+        description: "Also build a signed copy and upload it to TestFlight (needs the secrets in IOS.md)"
+        type: boolean
+        default: false
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+
+jobs:
+  simulator:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Show Xcode
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        working-directory: iosApp
+        run: xcodegen
+
+      - name: Build for the iOS Simulator (unsigned)
+        working-directory: iosApp
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project TowerScope.xcodeproj \
+            -scheme TowerScope \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO | xcbeautify
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TowerScope-iOS-Simulator
+          path: iosApp/build/Build/Products/Debug-iphonesimulator/TowerScope.app
+          if-no-files-found: error
+
+  testflight:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.testflight }}
+    needs: simulator
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      # Secret names are documented in IOS.md. Values never appear in logs.
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+      MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - name: Check the signing secrets
+        id: secrets
+        run: |
+          missing=""
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8_BASE64 MATCH_PASSWORD MATCH_GIT_URL MATCH_GIT_BASIC_AUTHORIZATION APPLE_TEAM_ID; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::notice::Skipping TestFlight: these secrets aren't set yet:$missing. See IOS.md."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.ready == 'true'
+
+      - uses: actions/setup-java@v4
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.secrets.outputs.ready == 'true'
+
+      - name: Install XcodeGen and fastlane
+        if: steps.secrets.outputs.ready == 'true'
+        working-directory: iosApp
+        run: |
+          brew install xcodegen
+          bundle install
+
+      - name: Build, sign and upload to TestFlight
+        if: steps.secrets.outputs.ready == 'true'
+        working-directory: iosApp
+        run: bundle exec fastlane beta

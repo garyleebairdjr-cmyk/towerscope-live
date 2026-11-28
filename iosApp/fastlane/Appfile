@@ -1,0 +1,3 @@
+# Placeholders only. Real values come from environment variables (GitHub secrets on CI) and never go in git.
+app_identifier("io.towerscope.live")
+team_id(ENV["APPLE_TEAM_ID"] || "YOUR_APPLE_TEAM_ID") # Art's team (see IOS.md)

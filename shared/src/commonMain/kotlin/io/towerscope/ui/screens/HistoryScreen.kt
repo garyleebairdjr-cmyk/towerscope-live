@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DeleteOutline
+import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
@@ -207,7 +208,20 @@ private fun HistorySettingsCard(controller: AppController) {
         SwitchRow(
             "Record history", "Signal about once a minute while the app is open, plus each speed test.",
             settings.recordHistory,
-        ) { on -> controller.updateSettings { it.copy(recordHistory = on) } }
+        ) { on -> controller.setRecordHistory(on) }
+
+        val flags = io.towerscope.platform.FeatureFlags.current
+        if (flags.allowBackgroundLocation && controller.platform.backgroundRecorder != null) {
+            val bg by controller.backgroundRecording.collectAsState()
+            Spacer(Modifier.height(12.dp))
+            SwitchRow(
+                "Keep recording when the app is closed",
+                if (!settings.recordHistory) "Turn on Record history first."
+                else "Shows a notification while it runs, with a Stop button. Reads the radio about every 20 seconds " +
+                    "and uses more battery. Off by default.",
+                settings.backgroundRecording && bg,
+            ) { on -> if (settings.recordHistory || !on) controller.setBackgroundRecording(on) }
+        }
 
         Spacer(Modifier.height(12.dp))
         Text("Location with each reading", fontSize = 13.sp, color = Palette.TextDim)
@@ -236,6 +250,20 @@ private fun HistorySettingsCard(controller: AppController) {
                 else "Off: the history stays on this phone and is deleted if you uninstall TowerScope.",
                 backedUp,
             ) { on -> controller.setHistoryBackedUp(on) }
+        }
+
+        if (io.towerscope.platform.FeatureFlags.current.allowHistoryExport) {
+            val history by controller.longHistory.collectAsState()
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(onClick = { controller.exportHistory() }, enabled = history.isNotEmpty()) {
+                Icon(Icons.Rounded.IosShare, null, Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Export as a spreadsheet (CSV)")
+            }
+            Text(
+                "Opens Android's share sheet so you can save the file or send it where you choose. TowerScope never uploads it.",
+                fontSize = 11.sp, color = Palette.TextFaint, lineHeight = 16.sp,
+            )
         }
 
         Spacer(Modifier.height(12.dp))

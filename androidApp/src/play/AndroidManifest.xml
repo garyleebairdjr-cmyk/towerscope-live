@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Play edition: location only while the app is open. These removals hold even if a library or a later
+  change to the main manifest adds them, so the Play build can never ask for background location or run
+  a background service.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" tools:node="remove" />
+</manifest>

@@ -13,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.lifecycleScope
+import io.towerscope.platform.FeatureFlags
 import io.towerscope.ui.TowerScopeApp
 import kotlinx.coroutines.launch
 
@@ -31,13 +32,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val gate = app.platform.permissions
+        // Only asked when the person taps Continue on the in-app explanation (PermissionCard), never on launch.
         gate.requester = {
+            val flags = FeatureFlags.current
             permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.READ_PHONE_STATE,
-                ),
+                buildList {
+                    if (flags.allowPreciseLocation) add(Manifest.permission.ACCESS_FINE_LOCATION)
+                    add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    // Network type, 5G status and carrier-aggregation bandwidths; optional.
+                    add(Manifest.permission.READ_PHONE_STATE)
+                }.toTypedArray(),
             )
         }
         gate.settingsOpener = {
@@ -57,9 +61,18 @@ class MainActivity : ComponentActivity() {
             snapshotFlow { nav.canGoBack }.collect { backCallback.isEnabled = it }
         }
 
+        Edition.onCreate(this)
         setContent { TowerScopeApp(app.controller, nav) }
+    }
 
-        if (!gate.state.value.coreGranted) gate.request()
+    override fun onStart() {
+        super.onStart()
+        Edition.onStart(this)
+    }
+
+    override fun onStop() {
+        Edition.onStop(this)
+        super.onStop()
     }
 
     override fun onResume() {

@@ -17,15 +17,17 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>$(MARKETING_VERSION)</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>TowerScope uses your location to find nearby cell towers and calculate their distance and direction.</string>
+    <string>While the app is open, TowerScope uses your location to find the cell towers recorded near you in OpenCelliD and show how far away they are and which way to face. iPhones don't let apps read which tower you're connected to.</string>
     <key>UILaunchScreen</key>
     <dict>
         <key>UIColorName</key>

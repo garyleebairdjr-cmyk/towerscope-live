@@ -60,6 +60,9 @@ else:
             "Open this page **on your phone** and tap the button. New here? Read "
             "[Installing on Android](Installing-on-Android) first; it takes about a minute.",
             "",
+            "These downloads are the free **open-source edition** for Android. The Google Play and iPhone "
+            "editions are described on [Editions](Editions).",
+            "",
         ]
     if "pre-beta" in (newest.get("name") or "").lower():
         out += [

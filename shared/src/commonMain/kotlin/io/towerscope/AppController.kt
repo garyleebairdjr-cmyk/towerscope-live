@@ -36,6 +36,7 @@ import io.towerscope.model.GeoFix
 import io.towerscope.model.RadioSnapshot
 import io.towerscope.model.SignalSample
 import io.towerscope.model.TowerLookup
+import io.towerscope.platform.FeatureFlags
 import io.towerscope.platform.PlatformServices
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -134,10 +135,26 @@ class AppController(val platform: PlatformServices) {
     private var headingJob: Job? = null
     private var speedJob: Job? = null
     private var started = false
+    /** The open-source edition's background recorder is running (the app may be closed). */
+    private var backgroundActive = false
+    private val _backgroundRecording = MutableStateFlow(false)
+    /** True while recording continues with the app closed. */
+    val backgroundRecording: StateFlow<Boolean> = _backgroundRecording.asStateFlow()
+
+    /** Long-term history is allowed in this edition and turned on by the person. */
+    private val recording: Boolean get() = FeatureFlags.current.allowHistoryLogging && _settings.value.recordHistory
+
+    private val _permissionsDeferred = MutableStateFlow(false)
+    /** The person tapped "Not now" on the permission explanation; show a smaller reminder instead. */
+    val permissionsDeferred: StateFlow<Boolean> = _permissionsDeferred.asStateFlow()
+    fun deferPermissions(deferred: Boolean = true) { _permissionsDeferred.value = deferred }
+
+    /** Store edition unlock (Google Play or App Store), or null where the app is free. */
+    val license: io.towerscope.license.LicenseManager? get() = platform.license
     private var lastNearbyFix: GeoFix? = null
 
     init {
-        scope.launch {
+        if (FeatureFlags.current.allowHistoryLogging) scope.launch {
             val loaded = kotlinx.coroutines.withContext(Dispatchers.Default) { historyStore.load(platform.nowMs()) }
             _longHistory.value = loaded + pendingHistory
             pendingHistory.clear()
@@ -145,7 +162,7 @@ class AppController(val platform: PlatformServices) {
         }
         scope.launch {
             permissions.map { it.coreGranted }.distinctUntilChanged().collect { granted ->
-                if (granted && started) startSensors()
+                if (granted && (started || backgroundActive)) startSensors()
             }
         }
     }
@@ -153,7 +170,11 @@ class AppController(val platform: PlatformServices) {
     /** Call when the UI becomes visible. */
     fun start() {
         started = true
+        // Coming back from background recording: switch the radio back to the normal refresh rate.
+        if (backgroundActive) restartRadio()
         if (permissions.value.coreGranted) startSensors()
+        // Background recording was on when the app was last closed; resume it now that we're in front.
+        if (backgroundAllowed && _settings.value.backgroundRecording && !backgroundActive) platform.backgroundRecorder?.start()
         if (headingJob == null) {
             headingJob = scope.launch {
                 platform.headings().catch { }.collect {
@@ -167,29 +188,83 @@ class AppController(val platform: PlatformServices) {
     /** Call when the UI is hidden; stops radio and GPS to save battery (a running speed test continues). */
     fun stop() {
         started = false
+        headingJob?.cancel(); headingJob = null
+        if (backgroundActive) {
+            restartRadio() // keep going, at the slower background rate
+            return
+        }
         radioJob?.cancel(); radioJob = null
         locationJob?.cancel(); locationJob = null
-        headingJob?.cancel(); headingJob = null
+    }
+
+    private val backgroundAllowed: Boolean
+        get() = FeatureFlags.current.allowBackgroundLocation && platform.backgroundRecorder != null && recording
+
+    /** Turns recording with the app closed on or off (open-source edition only). */
+    fun setBackgroundRecording(on: Boolean) {
+        val rec = platform.backgroundRecorder ?: return
+        val want = on && backgroundAllowed
+        updateSettings { it.copy(backgroundRecording = want) }
+        if (want) rec.start() else rec.stop()
+    }
+
+    /** Called by the platform once its background recorder is running. */
+    fun onBackgroundRecordingStarted() {
+        backgroundActive = true
+        _backgroundRecording.value = true
+        if (permissions.value.coreGranted) startSensors()
+    }
+
+    /** Called by the platform when its background recorder stops, for any reason. */
+    fun onBackgroundRecordingStopped() {
+        backgroundActive = false
+        _backgroundRecording.value = false
+        if (!started) {
+            radioJob?.cancel(); radioJob = null
+            locationJob?.cancel(); locationJob = null
+        } else restartRadio()
+    }
+
+    /** Turns long-term history on or off; turning it off also stops background recording. */
+    fun setRecordHistory(on: Boolean) {
+        updateSettings { it.copy(recordHistory = on) }
+        if (!on && _settings.value.backgroundRecording) setBackgroundRecording(false)
+    }
+
+    /** Offers the history as a CSV file to share or save. Returns false if there's nothing to export or no way to. */
+    fun exportHistory(): Boolean {
+        if (!FeatureFlags.current.allowHistoryExport) return false
+        val all = _longHistory.value
+        if (all.isEmpty()) return false
+        return platform.shareFile("towerscope-history.csv", "text/csv", io.towerscope.data.HistoryCsv.encode(all))
     }
 
     private fun startSensors() {
         if (radioJob == null) {
             radioJob = scope.launch {
-                platform.radioSnapshots(if (fastRadio) FAST_INTERVAL_MS else _settings.value.refreshSeconds * 1000L)
+                val interval = when {
+                    fastRadio -> FAST_INTERVAL_MS
+                    !started -> BACKGROUND_INTERVAL_MS // app closed, background recording only
+                    else -> _settings.value.refreshSeconds * 1000L
+                }
+                platform.radioSnapshots(interval)
                     .catch { e -> _radioError.value = e.message ?: "Radio unavailable" }
                     .collect { onSnapshot(it) }
             }
         }
         if (locationJob == null) {
             locationJob = scope.launch {
-                platform.locationFixes().catch { }.collect { onFix(it) }
+                // With the app closed (background recording), a fix every 30 s is plenty for once-a-minute history.
+                val interval = if (started) FOREGROUND_LOCATION_MS else BACKGROUND_INTERVAL_MS + 10_000L
+                platform.locationFixes(interval).catch { }.collect { onFix(it) }
             }
         }
     }
 
     private fun restartRadio() {
         radioJob?.cancel(); radioJob = null
-        if (started && permissions.value.coreGranted) startSensors()
+        locationJob?.cancel(); locationJob = null
+        if ((started || backgroundActive) && permissions.value.coreGranted) startSensors()
     }
 
     private fun onSnapshot(incoming: RadioSnapshot) {
@@ -242,7 +317,7 @@ class AppController(val platform: PlatformServices) {
             )
             _history.update { (it + sample).takeLast(MAX_HISTORY) }
             val dbm = cell.signal.rsrp ?: cell.signal.rscp ?: cell.signal.dbm
-            if (_settings.value.recordHistory && dbm != null) {
+            if (recording && dbm != null) {
                 val f = freshFix()
                 val (la, lo) = _settings.value.historyLocation.apply(f?.lat, f?.lon)
                 val rec = SignalRecord(
@@ -357,7 +432,7 @@ class AppController(val platform: PlatformServices) {
                             )
                             (listOf(r) + it).take(20)
                         }
-                        if (_settings.value.recordHistory) {
+                        if (recording) {
                             val now = platform.nowMs()
                             val f = freshFix()
                             val (la, lo) = _settings.value.historyLocation.apply(f?.lat, f?.lon)
@@ -477,6 +552,9 @@ class AppController(val platform: PlatformServices) {
         const val MAX_HISTORY = 600
         const val STALE_HOLD_MS = 15_000L
         const val FAST_INTERVAL_MS = 1_000L
+        /** History keeps about one reading a minute, so the radio needn't be read often with the app closed. */
+        const val BACKGROUND_INTERVAL_MS = 20_000L
+        const val FOREGROUND_LOCATION_MS = 2_000L
     }
 }
 

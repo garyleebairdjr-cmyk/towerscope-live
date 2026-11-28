@@ -94,41 +94,78 @@ fun radioLabel(o: CellObservation): String = when (o.identity.radio) {
 @Composable
 fun PermissionCard(controller: AppController) {
     val perms by controller.permissions.collectAsState()
+    val deferred by controller.permissionsDeferred.collectAsState()
+    val iPhone = controller.platform.device.platform == io.towerscope.model.PlatformKind.IOS
+    val system = if (iPhone) "iOS" else "Android"
+
+    if (deferred) {
+        // "Not now": a smaller reminder, and the parts that work without location stay usable.
+        GlassCard(accent = Palette.Cyan) {
+            Text("Location is off", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Palette.Text)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "You can still run a speed test on the Speed tab. Turn location on to find nearby towers and see their " +
+                    "distance and direction.",
+                fontSize = 13.sp, color = Palette.TextDim, lineHeight = 18.sp,
+            )
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = { controller.deferPermissions(false) },
+                colors = ButtonDefaults.buttonColors(containerColor = Palette.Cyan, contentColor = Palette.Bg),
+            ) { Text("Turn on location", fontWeight = FontWeight.SemiBold) }
+        }
+        return
+    }
+
     GlassCard(accent = Palette.Cyan) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Rounded.Lock, null, tint = Palette.Cyan, modifier = Modifier.size(22.dp))
             Spacer(Modifier.width(10.dp))
-            Text("Permissions needed", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Palette.Text)
+            Text("Before we start", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Palette.Text)
         }
         Spacer(Modifier.height(10.dp))
+        val flags = io.towerscope.platform.FeatureFlags.current
         Text(
-            "TowerScope Live reads the cell towers your phone can hear and pairs them with GPS to locate them. " +
-                "Your readings stay on this phone, where it keeps a history (with your location) to learn where and when " +
-                "your signal is best. You can change or turn that off under History & patterns. The only things sent " +
-                "anywhere are tower lookups to OpenCelliD (only if you add a key) and speed tests you start.",
+            (if (iPhone) "TowerScope Live uses your location to find the cell towers recorded near you and show how far away " +
+                "they are and which way to face. iPhones don't let apps see which tower you're connected to, so these are " +
+                "the nearest known towers. "
+            else "TowerScope Live reads the cell towers your phone can hear and pairs them with your location to show how far " +
+                "away they are and which way to face. ") +
+                "It only uses your location while the app is open. " +
+                (if (flags.allowHistoryLogging) "Nothing is kept after you close it unless you turn on History & patterns. "
+                else "It doesn't keep a record of where you've been. ") +
+                "The only things sent anywhere are tower lookups to OpenCelliD (only if you add a key) and speed tests you start. " +
+                "$system will ask next; nothing is requested until you tap Continue.",
             fontSize = 13.sp, color = Palette.TextDim, lineHeight = 18.sp,
         )
         Spacer(Modifier.height(14.dp))
-        PermissionLine(Icons.Rounded.LocationOn, "Precise location", "Required by the OS to read cell IDs; used for distance & bearing", perms.location)
+        PermissionLine(
+            Icons.Rounded.LocationOn, "Precise location",
+            if (iPhone) "For nearby towers, distance and direction, only while the app is open"
+            else "Android requires it to read tower IDs; also used for distance and direction, only while the app is open",
+            perms.location,
+        )
         if (perms.phoneStateApplicable) {
             Spacer(Modifier.height(8.dp))
-            PermissionLine(Icons.Rounded.PhoneAndroid, "Phone state", "Network type, 5G status, carrier aggregation", perms.phoneState)
+            PermissionLine(Icons.Rounded.PhoneAndroid, "Phone state", "Optional. Network type, 5G status and carrier aggregation. Android calls this \"make and manage phone calls\", but the app never reads your number, calls or contacts", perms.phoneState, optional = true)
         }
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(
                 onClick = { controller.platform.permissions.request() },
                 colors = ButtonDefaults.buttonColors(containerColor = Palette.Cyan, contentColor = Palette.Bg),
-            ) { Text("Grant access", fontWeight = FontWeight.SemiBold) }
+            ) { Text("Continue", fontWeight = FontWeight.SemiBold) }
             if (perms.requestedOnce) {
                 OutlinedButton(onClick = { controller.platform.permissions.openSettings() }) { Text("Open settings") }
+            } else {
+                androidx.compose.material3.TextButton(onClick = { controller.deferPermissions() }) { Text("Not now", color = Palette.TextDim) }
             }
         }
     }
 }
 
 @Composable
-private fun PermissionLine(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, body: String, granted: Boolean) {
+private fun PermissionLine(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, body: String, granted: Boolean, optional: Boolean = false) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, tint = if (granted) Palette.Green else Palette.TextDim, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(10.dp))
@@ -136,7 +173,10 @@ private fun PermissionLine(icon: androidx.compose.ui.graphics.vector.ImageVector
             Text(title, fontSize = 14.sp, color = Palette.Text, fontWeight = FontWeight.Medium)
             Text(body, fontSize = 12.sp, color = Palette.TextFaint)
         }
-        Text(if (granted) "Granted" else "Needed", fontSize = 12.sp, color = if (granted) Palette.Green else Palette.Amber)
+        Text(
+            when { granted -> "Granted"; optional -> "Optional"; else -> "Needed" }, fontSize = 12.sp,
+            color = when { granted -> Palette.Green; optional -> Palette.TextDim; else -> Palette.Amber },
+        )
     }
 }
 

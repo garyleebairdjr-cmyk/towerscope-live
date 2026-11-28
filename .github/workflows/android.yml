@@ -61,14 +61,17 @@ jobs:
           TOWERSCOPE_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           TOWERSCOPE_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           TOWERSCOPE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew :androidApp:assembleRelease --no-daemon
+        # GitHub releases carry the open-source edition (io.towerscope.android), so existing installs keep
+        # updating in place. The Play edition (io.towerscope.live) is built with bundlePlayRelease and
+        # uploaded to Play Console by hand for now.
+        run: ./gradlew :androidApp:assembleFossRelease --no-daemon
 
       - name: Name the APK
         run: |
           mkdir -p dist
-          cp androidApp/build/outputs/apk/release/androidApp-release.apk "dist/TowerScope-Live-${VERSION_NAME}.apk"
+          cp androidApp/build/outputs/apk/foss/release/androidApp-foss-release.apk "dist/TowerScope-Live-${VERSION_NAME}.apk"
           # Fixed-name copy so .../releases/latest/download/TowerScope-Live.apk always works.
-          cp androidApp/build/outputs/apk/release/androidApp-release.apk "dist/TowerScope-Live.apk"
+          cp androidApp/build/outputs/apk/foss/release/androidApp-foss-release.apk "dist/TowerScope-Live.apk"
           ls -la dist
 
       - uses: actions/upload-artifact@v4

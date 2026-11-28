@@ -78,7 +78,10 @@ fun TowersScreen(controller: AppController, nav: Navigator) {
     val fix by controller.fix.collectAsState()
     val settings by controller.settings.collectAsState()
     val live = rememberLiveAnalysis(controller)
-    var tab by rememberSaveable { mutableIntStateOf(0) }
+    // Where the phone can't report cells (iPhone), start on the database list, which is the useful one.
+    val cellsReadable = controller.snapshot.value?.capabilities?.canReadCells != false &&
+        controller.platform.device.platform != io.towerscope.model.PlatformKind.IOS
+    var tab by rememberSaveable { mutableIntStateOf(if (cellsReadable) 0 else 1) }
 
     ScreenColumn {
         if (!perms.coreGranted) { PermissionCard(controller); return@ScreenColumn }
@@ -95,7 +98,11 @@ fun TowersScreen(controller: AppController, nav: Navigator) {
         if (tab == 0) {
             val serving = listOfNotNull(live.serving) + live.secondary
             if (serving.isEmpty() && live.neighbors.isEmpty()) {
-                InfoNote("No cells reported by the modem yet.", icon = Icons.Rounded.Info)
+                InfoNote(
+                    if (cellsReadable) "No cells reported by the modem yet."
+                    else "iPhones don't let apps see which towers the phone can hear. See Database nearby for the towers recorded around you.",
+                    icon = Icons.Rounded.Info,
+                )
             }
             if (serving.isNotEmpty()) SectionHeader("Connected", subtitle = "Cells carrying your traffic")
             serving.forEach { a -> CellCard(a, settings.units, controller.lookups.value[a.obs.identity.key]) { nav.push(Route.Cell(a.obs.key)) } }

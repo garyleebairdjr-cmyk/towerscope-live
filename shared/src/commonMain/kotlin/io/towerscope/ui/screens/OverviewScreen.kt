@@ -173,6 +173,18 @@ fun OverviewScreen(controller: AppController, nav: Navigator) {
                 )
             }
             NorthLegend(heading != null, declination)
+            if (snapshot?.capabilities?.canReadCells == false) {
+                Text(
+                    when {
+                        nearest != null -> "This is the nearest tower in the OpenCelliD database. It may not be the one your phone is using: " +
+                            "iPhones don't tell apps which tower that is."
+                        !settings.hasApiKey -> "Add a free OpenCelliD key in Settings to see the towers recorded near you."
+                        fix == null -> "Waiting for your location."
+                        else -> "No towers are recorded in OpenCelliD within about a kilometre of you."
+                    },
+                    fontSize = 11.sp, color = Palette.TextFaint, lineHeight = 15.sp,
+                )
+            }
             if (serving != null && serving.bearingDeg == null && best != null && best.method != DistanceMethod.GPS_DATABASE) {
                 Text(
                     if (settings.hasApiKey) "Dashed ring: distance known, direction unknown (tower not in database yet)."
@@ -280,7 +292,8 @@ fun OverviewScreen(controller: AppController, nav: Navigator) {
                 Spacer(Modifier.height(6.dp))
                 Text(
                     if (snapshot?.capabilities?.canReadCells == false)
-                        "This platform doesn't let apps read cell identity or signal. TowerScope shows the nearest towers from the open database instead."
+                        "iPhones don't let apps see which tower you're connected to or how strong the signal is. TowerScope shows " +
+                            "your network type, the towers recorded near you, and a full speed test instead."
                     else "No SIM, airplane mode, or no coverage. Insert a SIM or move to an area with service.",
                     fontSize = 13.sp, color = Palette.TextDim,
                 )
@@ -290,7 +303,7 @@ fun OverviewScreen(controller: AppController, nav: Navigator) {
             }
         }
         val longHistory by controller.longHistory.collectAsState()
-        GlassCard(Modifier.fillMaxWidth()) {
+        if (io.towerscope.platform.FeatureFlags.current.allowHistoryLogging) GlassCard(Modifier.fillMaxWidth()) {
             io.towerscope.ui.components.DrillRow(
                 title = "History & patterns",
                 subtitle = when {
